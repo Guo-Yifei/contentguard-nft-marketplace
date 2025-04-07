@@ -121,7 +121,7 @@ const TransactionNotifications = ({ userAddress }) => {
                 </span>
               </div>
 
-              {transaction.role === 'buyerer' && transaction.status === 'pending' && (
+              {transaction.role === 'buyer' && transaction.status === 'pending' && (
                 <div className="mt-4">
                   <p className="text-sm text-gray-600 mb-2">
                     Do you want to approve this transaction?
