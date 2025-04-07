@@ -43,15 +43,15 @@ function App() {
                   <Link to="/my-assets" className="text-gray-300 hover:text-white">
                     My Assets
                   </Link>
+                  <Link to="/notifications" className="text-gray-300 hover:text-white">
+                    Notifications
+                  </Link>
                 </div>
               )}
             </div>
             <div className="flex items-center space-x-4">
               {walletAddress ? (
                 <>
-                  <Link to="/notifications" className="text-gray-300 hover:text-white">
-                    Notifications
-                  </Link>
                   <span className="text-gray-300">
                     Wallet: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
                   </span>
