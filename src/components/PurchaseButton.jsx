@@ -38,7 +38,8 @@ const PurchaseButton = ({ nft, buyerAddress }) => {
         nft.price
       );
       setHasPendingRequest(true);
-      alert('Purchase request sent successfully!');
+
+      alert('Purchase successfully!');
     } catch (error) {
       alert('Error sending purchase request: ' + error.message);
     } finally {

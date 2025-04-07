@@ -121,8 +121,7 @@ const TransactionNotifications = ({ userAddress }) => {
                 </span>
               </div>
 
-              {/* 只有卖家且交易状态为pending时显示操作按钮 */}
-              {transaction.role === 'seller' && transaction.status === 'pending' && (
+              {transaction.role === 'buyerer' && transaction.status === 'pending' && (
                 <div className="mt-4">
                   <p className="text-sm text-gray-600 mb-2">
                     Do you want to approve this transaction?
