@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Menu } from 'antd'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
@@ -34,35 +35,39 @@ function App() {
             <div className="flex items-center space-x-8">
               {walletAddress && (
                 <div className="flex space-x-4">
-                  <Link to="/" className="text-gray-300 hover:text-white">
-                    Marketplace
-                  </Link>
-                  <Link to="/create-nft" className="text-gray-300 hover:text-white">
-                    Create NFT
-                  </Link>
-                  <Link to="/my-assets" className="text-gray-300 hover:text-white">
-                    My Assets
-                  </Link>
-                  <Link to="/notifications" className="text-gray-300 hover:text-white">
-                    Notifications
-                  </Link>
+
+                  <Menu theme="dark" defaultActive="1" className="el-menu-demo" mode="horizontal">
+                    <Menu.Item index="1">
+                      <Link to="/" className="text-gray-300 hover:text-white">
+                        Marketplace
+                      </Link>
+                    </Menu.Item>
+                    <Menu.Item index="2">
+                      <Link to="/create-nft" className="text-gray-300 hover:text-white">
+                        Create NFT
+                      </Link>
+                    </Menu.Item>
+                    <Menu.Item index="3"><Link to="/my-assets" className="text-gray-300 hover:text-white">
+                      My Assets
+                    </Link></Menu.Item>
+                    <Menu.Item index="4"><Link to="/notifications" className="text-gray-300 hover:text-white">
+                      Notifications
+                    </Link></Menu.Item>
+
+                    <Menu.Item key="wallet" style={{ marginLeft: 'auto', color: '#fff', cursor: 'default' }} disabled={false}>
+                      Wallet: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                    </Menu.Item>
+
+                    <Menu.Item key="logout">
+                      <span onClick={handleLogout}>Logout</span>
+                    </Menu.Item>
+                  </Menu>
+
                 </div>
               )}
             </div>
             <div className="flex items-center space-x-4">
-              {walletAddress ? (
-                <>
-                  <span className="text-gray-300">
-                    Wallet: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-                  </span>
-                  <button
-                    onClick={handleLogout}
-                    className="text-gray-300 hover:text-white"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
+              {walletAddress ? (<></>) : (
                 <Link to="/login" className="text-gray-300 hover:text-white">
                   Connect Wallet
                 </Link>
