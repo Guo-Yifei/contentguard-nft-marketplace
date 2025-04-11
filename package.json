@@ -12,6 +12,8 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "antd": "^5.24.6",
+    "element-plus": "^2.9.7",
+    "element-theme-default": "^1.4.13",
     "firebase": "^11.6.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

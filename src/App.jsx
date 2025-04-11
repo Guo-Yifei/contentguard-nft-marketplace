@@ -51,7 +51,7 @@ function App() {
                       My Assets
                     </Link></Menu.Item>
                     <Menu.Item index="4"><Link to="/notifications" className="text-gray-300 hover:text-white">
-                      Notifications
+                      Cart
                     </Link></Menu.Item>
 
                     <Menu.Item key="wallet" style={{ marginLeft: 'auto', color: '#fff', cursor: 'default' }} disabled={false}>
