@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { getUserTransactions, handleTransaction } from '../services/transactionService';
-import { Button } from 'antd';
 
 const TransactionNotifications = ({ userAddress }) => {
   const [transactions, setTransactions] = useState([]);
