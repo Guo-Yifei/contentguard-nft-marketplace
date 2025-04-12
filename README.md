@@ -1,13 +1,13 @@
 ```markdown
 # 🛡️ ContentGuard - Blockchain-Based Copyright Registry & NFT Marketplace
-
+111
 Welcome to **ContentGuard**, a decentralized NFT marketplace that enables creators to mint, buy, sell, and trade digital assets such as artwork, music, and collectibles—while maintaining full control and copyright over their creations.
 
 This project is developed for the **CIS629 - Blockchain Technology and Applications** course at Syracuse University.
 111
 
 ---
-
+111
 ## 🌟 Key Features
 
 - 🎨 Mint unique and verifiable NFTs linked to IPFS-stored digital content

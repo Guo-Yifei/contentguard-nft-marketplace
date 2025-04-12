@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Menu } from 'antd'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
@@ -8,6 +9,7 @@ import CreateNFT from './components/CreateNFT'
 import TransactionNotifications from './components/TransactionNotifications'
 import WalletLogin from './components/WalletLogin'
 import ProtectedRoute from './components/ProtectedRoute'
+import MyAssets from './components/MyAssets'
 
 function App() {
   const [walletAddress, setWalletAddress] = useState('');
@@ -31,40 +33,41 @@ function App() {
         <nav className="bg-gray-800 p-4 mb-8">
           <div className="container mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-8">
-              <Link to="/" className="text-white text-xl font-bold">
-                NFT Marketplace
-              </Link>
               {walletAddress && (
                 <div className="flex space-x-4">
-                  <Link to="/" className="text-gray-300 hover:text-white">
-                    Marketplace
-                  </Link>
-                  <Link to="/create-nft" className="text-gray-300 hover:text-white">
-                    Create NFT
-                  </Link>
-                  <Link to="/my-assets" className="text-gray-300 hover:text-white">
-                    My Assets
-                  </Link>
+
+                  <Menu theme="dark" defaultActive="1" className="el-menu-demo" mode="horizontal">
+                    <Menu.Item index="1">
+                      <Link to="/" className="text-gray-300 hover:text-white">
+                        Marketplace
+                      </Link>
+                    </Menu.Item>
+                    <Menu.Item index="2">
+                      <Link to="/create-nft" className="text-gray-300 hover:text-white">
+                        Create NFT
+                      </Link>
+                    </Menu.Item>
+                    <Menu.Item index="3"><Link to="/my-assets" className="text-gray-300 hover:text-white">
+                      My Assets
+                    </Link></Menu.Item>
+                    <Menu.Item index="4"><Link to="/notifications" className="text-gray-300 hover:text-white">
+                      Cart
+                    </Link></Menu.Item>
+
+                    <Menu.Item key="wallet" style={{ marginLeft: 'auto', color: '#fff', cursor: 'default' }} disabled={false}>
+                      Wallet: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                    </Menu.Item>
+
+                    <Menu.Item key="logout">
+                      <span onClick={handleLogout}>Logout</span>
+                    </Menu.Item>
+                  </Menu>
+
                 </div>
               )}
             </div>
             <div className="flex items-center space-x-4">
-              {walletAddress ? (
-                <>
-                  <Link to="/notifications" className="text-gray-300 hover:text-white">
-                    Notifications
-                  </Link>
-                  <span className="text-gray-300">
-                    Wallet: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-                  </span>
-                  <button
-                    onClick={handleLogout}
-                    className="text-gray-300 hover:text-white"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
+              {walletAddress ? (<></>) : (
                 <Link to="/login" className="text-gray-300 hover:text-white">
                   Connect Wallet
                 </Link>
@@ -84,6 +87,11 @@ function App() {
             <Route path="/create-nft" element={
               <ProtectedRoute>
                 <CreateNFT />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-assets" element={
+              <ProtectedRoute>
+                <MyAssets />
               </ProtectedRoute>
             } />
             <Route path="/notifications" element={
