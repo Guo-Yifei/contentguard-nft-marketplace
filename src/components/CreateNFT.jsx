@@ -1,54 +1,42 @@
 import React, { useState } from 'react';
-import { createNFT } from '../services/nftService';
 import { useNavigate } from 'react-router-dom';
+import { Upload, Form, Input, InputNumber, Button, message } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
+import { createNFT } from '../services/nftService';
 
 const CreateNFT = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    price: '',
-  });
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
-  
-  // 获取当前钱包地址
+
   const currentWalletAddress = localStorage.getItem('walletAddress');
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const handleFileChange = (info) => {
+    const file = info.file.originFileObj;
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result;
         setPreview(base64String);
+        console.log("✅ success: image loaded");
       };
       reader.readAsDataURL(file);
     }
   };
+  
+  
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (values) => {
     setLoading(true);
-
     try {
       if (!currentWalletAddress) {
         throw new Error('No wallet address found. Please connect your wallet.');
       }
-
-      await createNFT(formData, preview, currentWalletAddress);
-      alert('NFT created successfully!');
+      await createNFT(values, preview, currentWalletAddress);
+      message.success('NFT created successfully!');
       navigate('/my-assets');
     } catch (error) {
-      alert('Error creating NFT: ' + error.message);
+      message.error('Error: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -57,77 +45,67 @@ const CreateNFT = () => {
   return (
     <div className="max-w-2xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-8">Create New NFT</h1>
-      
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium mb-2">Title</label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleInputChange}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-2">Description</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
-            className="w-full p-2 border rounded"
-            rows="4"
-            required
-          />
-        </div>
+      <Form
+        layout="vertical"
+        onFinish={handleSubmit}
+        initialValues={{ price: 0.0 }}
+      >
+        <Form.Item
+          label="Title"
+          name="title"
+          rules={[{ required: true, message: 'Please input title!' }]}
+        >
+          <Input placeholder="Enter NFT title" />
+        </Form.Item>
 
-        <div>
-          <label className="block text-sm font-medium mb-2">Price (ETH)</label>
-          <input
-            type="number"
-            name="price"
-            value={formData.price}
-            onChange={handleInputChange}
-            className="w-full p-2 border rounded"
-            step="0.001"
-            required
-          />
-        </div>
+        <Form.Item
+          label="Description"
+          name="description"
+          rules={[{ required: true, message: 'Please input description!' }]}
+        >
+          <Input.TextArea placeholder="Enter NFT description" rows={4} />
+        </Form.Item>
 
-        <div>
-          <label className="block text-sm font-medium mb-2">Upload Image</label>
-          <input
-            type="file"
+        <Form.Item
+          label="Price (Ether)"
+          name="price"
+          rules={[{ required: true, type: 'number', min: 0.01 }]}
+        >
+          <InputNumber min={0.01} step={0.01} style={{ width: '100%' }} />
+        </Form.Item>
+
+        <Form.Item label="Upload image">
+          <Upload
+            className="upload-demo"
+            drag
+            action="/jsonplaceholder.typicode.com/posts/"
+            tip={<div className="el-upload__tip">jpg/png files only</div>}
             onChange={handleFileChange}
-            className="w-full p-2 border rounded"
-            accept="image/*"
             required
-          />
-          {preview && (
-            <img 
-              src={preview} 
-              alt="Preview" 
-              className="mt-4 max-w-xs rounded"
-            />
-          )}
-        </div>
+          >
+            <div className="border border-gray-300 rounded p-4" style={{ border: '1px solid lightgray', padding: '10px', width: '300px', height:'200px', }}>
+              <UploadOutlined style={{ fontSize: '40px', color: '#999', marginTop:'60px', }} />
+              <div className="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+              </div>
+          </Upload>
+        </Form.Item>
 
-        <div className="text-sm text-gray-500 mb-4">
-          Creating as: {currentWalletAddress}
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className={`w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 ${loading ? 'opacity-50' : ''}`}
+        <Button
+          type="primary"
+          htmlType="submit"
+          loading={loading}
+          style={{ width: '130px', height: '60px', fontSize: '17px' }}
         >
           {loading ? 'Creating...' : 'Create NFT'}
-        </button>
-      </form>
+        </Button>
+
+        <div className="text-sm text-gray-500 mt-4">
+          Creating as: <span className="font-mono">{currentWalletAddress}</span>
+        </div>
+      </Form>
     </div>
   );
 };
 
-export default CreateNFT; 
+export default CreateNFT;
