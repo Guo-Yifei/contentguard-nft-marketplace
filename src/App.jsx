@@ -10,6 +10,7 @@ import TransactionNotifications from './components/TransactionNotifications'
 import WalletLogin from './components/WalletLogin'
 import ProtectedRoute from './components/ProtectedRoute'
 import MyAssets from './components/MyAssets'
+import NFTDetail from './components/NFTDetail'
 
 function App() {
   const [walletAddress, setWalletAddress] = useState('');
@@ -99,6 +100,7 @@ function App() {
                 <TransactionNotifications userAddress={walletAddress} />
               </ProtectedRoute>
             } />
+            <Route path="/nft/:id" element={<NFTDetail />} />
           </Routes>
         </main>
 
