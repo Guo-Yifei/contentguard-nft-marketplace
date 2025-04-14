@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { Link } from 'react-router-dom';
 import { Row, Col, Card, Button } from 'antd';
 
 const MyAssets = () => {
@@ -40,47 +41,39 @@ const MyAssets = () => {
       <h1 className="text-3xl font-bold mb-8">My Assets</h1>
       <Row gutter={[24, 24]}>
         {filteredNfts.map((nft) => (
-            <Card 
-            styles={{
-              margin:'30px',
-            }}>
-              <img
-                src={nft.imageUrl || '/placeholder.png'}
-                alt={nft.title}
+          <Col span={8} key={nft.id}>
+              <Card
+                hoverable
                 style={{
-                  width: '300px',
-                  height: '300px',
-                  objectFit: 'cover',
+                  margin: '30px',
                 }}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = '/placeholder.png';
-                }}
-              />
-              <div style={{ padding: 14 }}>
-                <div>
+              >
+                <Link to={`/nft/${nft.id}`}>
+                  <img
+                    src={nft.imageUrl || '/placeholder.png'}
+                    alt={nft.title}
+                    style={{
+                      width: '300px',
+                      height: '300px',
+                      objectFit: 'cover',
+                    }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/placeholder.png';
+                    }}
+                  />
+                </Link>
+                <div style={{ padding: 14 }}>
                   <h2 className="text-lg font-semibold mb-1 truncate" title={nft.title}>
                     {nft.title}
                   </h2>
-                  <p className="text-gray-600 text-sm mb-2 line-clamp-2" title={nft.description}>
-                    {nft.description}
-                  </p>
-                </div>
-                <div>
                   <p className="text-lg font-bold mb-2">Price: {nft.price} ETH</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-500" style={{
-                      width: '65%',
-                      height: '65%',
-                      objectFit: 'cover',
-                      marginRight: '40px',
-                    }}>
-                      Owner: {nft.owner.slice(0, 6)}...{nft.owner.slice(-4)}
-                    </span>
-                  </div>
+                  <span className="text-xs text-gray-500" style={{marginRight:'30px'}}>
+                    Owner: {nft.owner.slice(0, 6)}...{nft.owner.slice(-4)}
+                  </span>
                 </div>
-              </div>
-            </Card>
+              </Card>
+          </Col>
         ))}
       </Row>
     </div>

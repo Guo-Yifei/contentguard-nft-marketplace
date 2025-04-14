@@ -15,12 +15,14 @@
     "element-plus": "^2.9.7",
     "element-theme-default": "^1.4.13",
     "firebase": "^11.6.0",
+    "hardhat": "^2.23.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.4.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
