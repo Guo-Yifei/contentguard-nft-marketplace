@@ -40,32 +40,33 @@ const NFTList = () => {
       <Row gutter={[24, 24]}>
         {nfts.map((nft) => (
           <Col span={8} key={nft.id}>
-            <Link to={`/nft/${nft.id}`}>
               <Card
                 hoverable
                 style={{
                   margin: '30px',
                 }}
               >
-                <img
-                  src={nft.imageUrl || '/placeholder.png'}
-                  alt={nft.title}
-                  style={{
-                    width: '300px',
-                    height: '300px',
-                    objectFit: 'cover',
-                  }}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = '/placeholder.png';
-                  }}
-                />
+                <Link to={`/nft/${nft.id}`}>
+                  <img
+                    src={nft.imageUrl || '/placeholder.png'}
+                    alt={nft.title}
+                    style={{
+                      width: '300px',
+                      height: '300px',
+                      objectFit: 'cover',
+                    }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/placeholder.png';
+                    }}
+                  />
+                </Link>
                 <div style={{ padding: 14 }}>
                   <h2 className="text-lg font-semibold mb-1 truncate" title={nft.title}>
                     {nft.title}
                   </h2>
                   <p className="text-lg font-bold mb-2">Price: {nft.price} ETH</p>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500" style={{marginRight:'30px'}}>
                     Owner: {nft.owner.slice(0, 6)}...{nft.owner.slice(-4)}
                   </span>
                   <PurchaseButton
@@ -74,7 +75,6 @@ const NFTList = () => {
                   />
                 </div>
               </Card>
-            </Link>
           </Col>
         ))}
       </Row>

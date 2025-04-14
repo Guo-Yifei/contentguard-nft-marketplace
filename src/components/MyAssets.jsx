@@ -8,8 +8,6 @@ const MyAssets = () => {
   const walletAddress = localStorage.getItem('walletAddress')
   const filteredNfts = nfts.filter(nft => nft.owner === walletAddress);
   const [loading, setLoading] = useState(true);
-  console.log("All NFTs:", nfts);
-  console.log("Filtered NFTs:", filteredNfts);
 
 
   useEffect(() => {
