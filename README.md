@@ -1,148 +1,111 @@
-```markdown
-# 🛡️ ContentGuard - Blockchain-Based Copyright Registry & NFT Marketplace
-111
-Welcome to **ContentGuard**, a decentralized NFT marketplace that enables creators to mint, buy, sell, and trade digital assets such as artwork, music, and collectibles—while maintaining full control and copyright over their creations.
+# ContentGuard NFT Marketplace
 
-This project is developed for the **CIS629 - Blockchain Technology and Applications** course at Syracuse University.
-111
-
----
-111
-## 🌟 Key Features
-
-- 🎨 Mint unique and verifiable NFTs linked to IPFS-stored digital content
-- 🛒 Browse and purchase NFTs through a decentralized Web3 interface
-- 👛 MetaMask wallet integration for authentication and transactions
-- 🔐 Copyright registry and creator royalty enforcement via smart contracts
-- 🧾 Transparent ownership history and marketplace interactions
+This project contains:
+- Solidity smart contracts (`NFT.sol`, `marketplace.sol`)
+- React frontend (Vite + ethers.js)
 
 ---
 
-## 🏗️ System Architecture Overview
+## Prerequisites
 
-ContentGuard is designed as a decentralized dApp consisting of:
-
-- **Frontend (React.js)**: Enables user interaction with blockchain and IPFS
-- **Smart Contracts (Solidity)**: Manage NFT logic, minting, ownership, and royalties
-- **Blockchain Layer (Ethereum Testnet)**: Hosts and executes smart contracts
-- **IPFS Storage (via infura/ipfs)**: Stores digital assets and metadata off-chain
+- **Node.js v18** (recommended, use [nvm](https://github.com/nvm-sh/nvm) to manage versions)
+- **MetaMask** browser extension
+- **Git**
 
 ---
 
-## 🧰 Tech Stack
-
-- **Frontend**: React.js, Tailwind CSS, Ethers.js, React Router
-- **Smart Contracts**: Solidity (ERC-721), Hardhat/Remix
-- **Wallet Integration**: MetaMask
-- **Storage**: IPFS via `ipfs-http-client`
-- **Network**: Ethereum Testnet (e.g., Goerli or Sepolia)
-- **Version Control**: Git & GitHub
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js (v16+ recommended)
-- MetaMask browser extension
-- Git
-
-### Clone the Repository
-
-```bash
-git clone https://github.com/YOUR_USERNAME/contentguard-nft-marketplace-frontend.git
-cd contentguard-nft-marketplace-frontend
-```
-
-### Install Dependencies
+## 1. Install Dependencies
 
 ```bash
 npm install
 ```
 
-### Start the Development Server
+---
+
+## 2. Compile Smart Contracts
+
+```bash
+npx hardhat clean
+npx hardhat compile
+```
+
+---
+
+## 3. Deploy Contracts
+
+### a) Deploy to Local Hardhat Network
+
+1. **Start local node** (in a new terminal):
+   ```bash
+   npx hardhat node
+   ```
+2. **Deploy contracts** (in another terminal):
+   ```bash
+   npx hardhat run scripts/deploy.cjs --network localhost
+   ```
+
+### b) Deploy to Sepolia Testnet
+
+1. In `hardhat.config.cjs`, set your Sepolia RPC and private key:
+   ```js
+   networks: {
+     sepolia: {
+       url: "https://eth-sepolia.public.blastapi.io",
+       accounts: ["YOUR_PRIVATE_KEY"]
+     }
+   }
+   ```
+2. **Deploy:**
+   ```bash
+   npx hardhat run scripts/deploy.cjs --network sepolia
+   ```
+3. **Note the deployed contract addresses** for frontend use.
+
+---
+
+## 4. Configure Frontend
+
+In `src/components/ContractInteraction.jsx`, update the contract addresses:
+
+```js
+const MARKETPLACE_ADDRESS = "your_marketplace_contract_address";
+const NFT_ADDRESS = "your_nft_contract_address";
+```
+
+---
+
+## 5. Run the Frontend
 
 ```bash
 npm run dev
 ```
 
-Open your browser and navigate to `http://localhost:5173/`
+Open your browser and go to [http://localhost:5173](http://localhost:5173)
 
 ---
 
-## 📁 Project Structure
+## 6. Common Issues
 
-```
-contentguard-nft-marketplace-frontend/
-├── public/
-├── src/
-│   ├── components/         # Reusable UI components
-│   ├── pages/              # Route pages (Home, Mint, Marketplace, Assets, etc.)
-│   ├── contracts/          # ABI files and contract interaction logic
-│   ├── utils/              # Wallet, IPFS, or helper functions
-│   └── App.js              # Main application entry
-├── .gitignore
-├── README.md
-└── package.json
-```
+- **JSX Syntax Error:**  
+  Make sure your React component files use the `.jsx` extension (e.g., `App.jsx`).
+
+- **MetaMask Connection:**  
+  Ensure MetaMask is on the same network as your contracts (localhost or Sepolia).
+
+- **Missing Dependencies:**  
+  If you see errors about `@openzeppelin/contracts`, run:
+  ```bash
+  npm install @openzeppelin/contracts
+  ```
 
 ---
 
-## 🧪 Modules (Planned / In Progress)
+## 7. Get Sepolia Test ETH
 
-- [x] Wallet connection via MetaMask
-- [x] Static UI for Minting NFTs
-- [x] IPFS file upload testing
-- [ ] Smart contract integration for minting & purchasing
-- [ ] NFT marketplace with dynamic data
-- [ ] My Assets & Ownership dashboard
-- [ ] NFT detail page with royalty display
-- [ ] Auction functionality (optional/extension)
+- [https://sepoliafaucet.com/](https://sepoliafaucet.com/)
 
 ---
 
-## 🤝 Contributing
-
-Contributions from all team members are welcomed!
-
-To contribute:
-
-1. Create a feature branch: `git checkout -b feature/my-feature`
-2. Commit your changes: `git commit -m "Added my feature"`
-3. Push to GitHub: `git push origin feature/my-feature`
-4. Submit a pull request (PR) for review
-
----
-
-## 📷 Demo Screenshots
-
-*Coming soon...*
-
----
-
-## 📄 License
-
-This project is licensed for educational use under the [MIT License](LICENSE).
-
----
-
-## 👨‍💻 Authors
-
-- **Yifei Guo** – Smart Contracts
-- **Yi Ling** – Blockchain Integration & Testing
-- **Yanghanyu Zhao** – Frontend Development (React, UI, Wallet)
-- **Qingyuan Mao** – IPFS Integration & File Validation
-
----
-
-## 💬 Feedback & Contact
-
-For questions or collaboration, feel free to contact us through GitHub or via Syracuse University communication channels.
-
----
-```
-
----
+If you have any questions, feel free to open an issue!
 
 
