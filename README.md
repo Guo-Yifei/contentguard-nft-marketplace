@@ -36,12 +36,10 @@ npx hardhat compile
 ### a) Deploy to Local Hardhat Network
 
 1. **Start local node** (in a new terminal):
-   ```bash
-   npx hardhat node
+   ```npx hardhat node
    ```
 2. **Deploy contracts** (in another terminal):
-   ```bash
-   npx hardhat run scripts/deploy.cjs --network localhost
+   ```npx hardhat run scripts/deploy.cjs --network localhost
    ```
 
 ### b) Deploy to Sepolia Testnet
