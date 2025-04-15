@@ -54,7 +54,7 @@ npx hardhat compile
    }
    ```
 2. **Deploy:**
-   ```bash
+   ```
    npx hardhat run scripts/deploy.cjs --network sepolia
    ```
 3. **Note the deployed contract addresses** for frontend use.
