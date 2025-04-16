@@ -14,7 +14,7 @@ export const NETWORK_CONFIG = {
       symbol: "SEP",
       decimals: 18,
     },
-    rpcUrls: ["https://sepolia.infura.io/v3/"],
+    rpcUrls: ["https://eth-sepolia.public.blastapi.io"],
     blockExplorerUrls: ["https://sepolia.etherscan.io/"],
   },
 };
