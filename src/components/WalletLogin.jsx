@@ -1,24 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Form, Input } from 'antd';
+import { Button } from 'antd';
 
 const WalletLogin = () => {
-  const [walletAddress, setWalletAddress] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (values) => {
+  const handleConnectWallet = async () => {
     setLoading(true);
-    const { title } = values;
-
     try {
-      if (title.length < 42) {
+      if (!window.ethereum) {
+        throw new Error('MetaMask is not installed. Please install it to continue.');
+      }
+
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const wallet = accounts[0];
+
+      if (!wallet || wallet.length < 42) {
         throw new Error('Invalid wallet address');
       }
 
-      localStorage.setItem('walletAddress', title);
+      // Save wallet address to localStorage
+      localStorage.setItem('walletAddress', wallet);
+
+      // Redirect to home
       navigate('/');
-      window.location.reload(); // optional, depending on your app logic
+      window.location.reload();
     } catch (error) {
       alert(error.message);
     } finally {
@@ -30,35 +37,23 @@ const WalletLogin = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
         <h2 className="text-2xl font-bold text-center mb-8">Connect Your Wallet</h2>
-        <Form layout="vertical" onFinish={handleSubmit}>
-          <Form.Item
-            label="Ethereum Wallet Address"
-            name="title"
-            rules={[{ required: true, message: 'Please input address!' }]}
-          >
-            <Input
-              placeholder="Enter wallet address"
-              onChange={(e) => setWalletAddress(e.target.value)}
-              value={walletAddress}
-            />
-          </Form.Item>
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-              loading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-            style={{
-              width: '180px',
-              height: '60px',
-              fontSize: '17px',
-            }}
-          >
-            {loading ? 'Connecting...' : 'Connect Wallet'}
-          </button>
-        </Form>
+
+        <Button
+          onClick={handleConnectWallet}
+          loading={loading}
+          type="primary"
+          className="w-full"
+          style={{
+            width: '180px',
+            height: '60px',
+            fontSize: '17px',
+          }}
+        >
+          {loading ? 'Connecting...' : 'Connect Wallet'}
+        </Button>
+
         <div className="mt-6 text-center text-sm text-gray-500">
-          <p>Enter your Ethereum wallet address to access the marketplace</p>
+          <p>Please connect your MetaMask wallet to access the NFT marketplace.</p>
         </div>
       </div>
     </div>
@@ -66,3 +61,4 @@ const WalletLogin = () => {
 };
 
 export default WalletLogin;
+

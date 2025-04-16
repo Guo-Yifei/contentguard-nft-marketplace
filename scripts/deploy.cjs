@@ -1,5 +1,4 @@
 const hre = require("hardhat");
-<<<<<<< HEAD
 const dotenv = require("dotenv");
 const fs = require("fs");
 
@@ -66,21 +65,6 @@ async function main() {
   console.log("Deployment completed!");
   console.log("Marketplace address:", marketplaceAddress);
   console.log("NFT address:", nftAddress);
-=======
-
-async function main() {
-  // Deploy Marketplace first
-  const Marketplace = await hre.ethers.getContractFactory("Marketplace");
-  const marketplace = await Marketplace.deploy();
-  await marketplace.waitForDeployment();
-  console.log("Marketplace deployed to:", await marketplace.getAddress());
-
-  // Deploy NFT with marketplace address
-  const NFT = await hre.ethers.getContractFactory("NFT");
-  const nft = await NFT.deploy(await marketplace.getAddress());
-  await nft.waitForDeployment();
-  console.log("NFT deployed to:", await nft.getAddress());
->>>>>>> origin/Linyi
 }
 
 main()
@@ -88,8 +72,4 @@ main()
   .catch((error) => {
     console.error(error);
     process.exit(1);
-<<<<<<< HEAD
   });
-=======
-  }); 
->>>>>>> origin/Linyi
