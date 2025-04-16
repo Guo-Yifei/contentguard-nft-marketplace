@@ -1,8 +1,6 @@
 /node_modules
 package-lock.json
 /.vite/deps
-<<<<<<< HEAD
-=======
 .DS_Store
 .DS_Store
 
@@ -51,4 +49,3 @@ artifacts
 
 # Project
 /config.js
->>>>>>> main

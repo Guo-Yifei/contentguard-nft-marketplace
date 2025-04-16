@@ -15,8 +15,8 @@ contract Marketplace is ReentrancyGuard {
 
     address payable private owner;
 
-    // Challenge: make this price dynamic according to the current currency price
-    uint256 private listingFee = 0.045 ether;
+    // 修改上市费用为 0.001 ETH
+    uint256 private listingFee = 0.001 ether;
 
     mapping(uint256 => MarketItem) private marketItemIdToMarketItem;
 
@@ -46,6 +46,15 @@ contract Marketplace is ReentrancyGuard {
 
     constructor() {
         owner = payable(msg.sender);
+    }
+
+    function setOwner(address payable newOwner) public {
+        require(msg.sender == owner, "Only current owner can transfer ownership");
+        owner = newOwner;
+    }
+
+    function getOwner() public view returns (address) {
+        return owner;
     }
 
     function getListingFee() public view returns (uint256) {
