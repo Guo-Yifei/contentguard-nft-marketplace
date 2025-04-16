@@ -38,7 +38,8 @@ const PurchaseButton = ({ nft, buyerAddress }) => {
         nft.price
       );
       setHasPendingRequest(true);
-      alert('Purchase request sent successfully!');
+
+      alert('Purchase successfully!');
     } catch (error) {
       alert('Error sending purchase request: ' + error.message);
     } finally {
@@ -58,6 +59,10 @@ const PurchaseButton = ({ nft, buyerAddress }) => {
           ? 'bg-gray-400 cursor-not-allowed'
           : 'bg-blue-600 hover:bg-blue-700'
       } text-white`}
+      style={{ 
+        backgroundColor: isDisabled ? '#fff' : '#1890ff',
+        borderColor: isDisabled ? '#fff' : '#1890ff',
+      }}
     >
       {loading ? 'Sending Request...' : 
        hasPendingRequest ? 'Request Pending' : 

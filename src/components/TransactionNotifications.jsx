@@ -62,7 +62,7 @@ const TransactionNotifications = ({ userAddress }) => {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-6">My Transactions</h2>
+      <h2 className="text-2xl font-bold mb-6">My Cart</h2>
       
       {/* 标签切换 */}
       <div className="flex space-x-4 mb-6">
@@ -73,6 +73,13 @@ const TransactionNotifications = ({ userAddress }) => {
               ? 'bg-blue-600 text-white' 
               : 'bg-gray-200 text-gray-700'
           }`}
+          style={{ 
+            backgroundColor: '#B2FBA5',
+            borderColor: '#1890ff',
+            marginRight: '15px',
+            width: '60px',
+            height: '30px',
+          }}
         >
           All
         </button>
@@ -83,6 +90,13 @@ const TransactionNotifications = ({ userAddress }) => {
               ? 'bg-blue-600 text-white' 
               : 'bg-gray-200 text-gray-700'
           }`}
+          style={{ 
+            backgroundColor: '#FFC300',
+            borderColor: '#1890ff',
+            marginRight: '15px',
+            width: '60px',
+            height: '30px',
+          }}
         >
           Buying
         </button>
@@ -93,6 +107,13 @@ const TransactionNotifications = ({ userAddress }) => {
               ? 'bg-blue-600 text-white' 
               : 'bg-gray-200 text-gray-700'
           }`}
+          style={{ 
+            backgroundColor: '#FFA07A',
+            borderColor: '#1890ff',
+            marginRight: '15px',
+            width: '60px',
+            height: '30px',
+          }}
         >
           Selling
         </button>
@@ -103,34 +124,40 @@ const TransactionNotifications = ({ userAddress }) => {
       ) : (
         <div className="space-y-4">
           {filteredTransactions.map(transaction => (
-            <div key={transaction.id} className="border p-4 rounded shadow">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <p className="font-medium">NFT ID: {transaction.nftId}</p>
-                  <p className="text-sm text-gray-500">
-                    {transaction.role === 'buyer' ? 'Buying from: ' : 'Selling to: '}
-                    {transaction.role === 'buyer' 
-                      ? transaction.seller.slice(0, 6) + '...' + transaction.seller.slice(-4)
-                      : transaction.buyer.slice(0, 6) + '...' + transaction.buyer.slice(-4)
-                    }
-                  </p>
-                  <p className="text-sm text-gray-500">Price: {transaction.price} ETH</p>
+            <div key={transaction.id} className="border p-4 rounded shadow" style={{margin: '50px',}}>
+              <div className="flex justify-between items-center mb-4">
+                <div style={{border:'2px solid lightgray', width: '400px',height:'180px', marginLeft: '19%',}}>
+                  <div style={{textAlign:'left', paddingLeft: '30px',}}>
+                    <p className="font-medium">NFT ID: {transaction.nftId}</p>
+                    <p className="text-sm text-gray-500">
+                      {transaction.role === 'buyer' ? 'Buying from: ' : 'Selling to: '}
+                      {transaction.role === 'buyer' 
+                        ? transaction.seller.slice(0, 6) + '...' + transaction.seller.slice(-4)
+                        : transaction.buyer.slice(0, 6) + '...' + transaction.buyer.slice(-4)
+                      }
+                    </p>
+                    <p className="text-sm text-gray-500">Price: {transaction.price} ETH</p>
+                  </div>
+                  <span className={getStatusBadgeClass(transaction.status)} style={{
+                    color: transaction.status === 'pending' ? 'red' : 'green',
+                  }}>
+                    {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                  </span>
                 </div>
-                <span className={getStatusBadgeClass(transaction.status)}>
-                  {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                </span>
               </div>
 
-              {/* 只有卖家且交易状态为pending时显示操作按钮 */}
-              {transaction.role === 'seller' && transaction.status === 'pending' && (
+              {transaction.role === 'buyer' && transaction.status === 'pending' && (
                 <div className="mt-4">
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-sm text-gray-600 mb-2" color='red'>
                     Do you want to approve this transaction?
                   </p>
                   <div className="flex space-x-4">
                     <button
                       onClick={() => handleTransactionResponse(transaction.id, true)}
                       className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex-1"
+                      style={{ 
+                        marginRight: '15px',
+                      }}
                     >
                       Approve & Transfer NFT
                     </button>
@@ -141,13 +168,6 @@ const TransactionNotifications = ({ userAddress }) => {
                       Reject
                     </button>
                   </div>
-                </div>
-              )}
-
-              {/* 显示交易完成状态 */}
-              {transaction.status === 'completed' && (
-                <div className="mt-2 text-green-600 text-sm">
-                  ✓ NFT ownership has been transferred
                 </div>
               )}
             </div>

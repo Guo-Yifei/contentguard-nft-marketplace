@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
-import { Row, Col, Card } from 'antd';
-import { Link } from 'react-router-dom';
 import { db } from '../firebase/config';
-import PurchaseButton from './PurchaseButton';
+import { Link } from 'react-router-dom';
+import { Row, Col, Card, Button } from 'antd';
 
-const NFTList = () => {
+const MyAssets = () => {
   const [nfts, setNfts] = useState([]);
+  const walletAddress = localStorage.getItem('walletAddress')
+  const filteredNfts = nfts.filter(nft => nft.owner === walletAddress);
   const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     loadNFTs();
@@ -36,9 +38,9 @@ const NFTList = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8">NFT Marketplace</h1>
+      <h1 className="text-3xl font-bold mb-8">My Assets</h1>
       <Row gutter={[24, 24]}>
-        {nfts.map((nft) => (
+        {filteredNfts.map((nft) => (
           <Col span={8} key={nft.id}>
               <Card
                 hoverable
@@ -69,10 +71,6 @@ const NFTList = () => {
                   <span className="text-xs text-gray-500" style={{marginRight:'30px'}}>
                     Owner: {nft.owner.slice(0, 6)}...{nft.owner.slice(-4)}
                   </span>
-                  <PurchaseButton
-                    nft={nft}
-                    buyerAddress={localStorage.getItem('walletAddress')}
-                  />
                 </div>
               </Card>
           </Col>
@@ -82,4 +80,4 @@ const NFTList = () => {
   );
 };
 
-export default NFTList;
+export default MyAssets; 

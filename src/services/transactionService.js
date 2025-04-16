@@ -4,6 +4,7 @@ import { updateNFTOwner } from './nftService';
 
 // 创建购买请求
 export const createPurchaseRequest = async (nftId, buyerAddress, sellerAddress, price) => {
+  console.log(nftId)
   try {
     const transactionDoc = {
       nftId,
