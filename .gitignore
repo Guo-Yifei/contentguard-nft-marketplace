@@ -18,6 +18,7 @@ package-lock.json
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -42,6 +43,7 @@ node_modules
 coverage
 coverage.json
 typechain
+typechain-types
 
 #Hardhat files
 cache
@@ -49,3 +51,7 @@ artifacts
 
 # Project
 /config.js
+
+# IDE
+.idea
+.vscode
