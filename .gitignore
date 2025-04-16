@@ -55,3 +55,5 @@ artifacts
 # IDE
 .idea
 .vscode
+.DS_Store
+src/.DS_Store
