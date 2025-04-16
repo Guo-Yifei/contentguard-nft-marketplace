@@ -24,7 +24,7 @@
     "@eslint/js": "^9.21.0",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@nomiclabs/hardhat-etherscan": "^3.1.8",
-    "@openzeppelin/contracts": "^4.9.0",
+    "@openzeppelin/contracts": "^4.9.6",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
@@ -36,7 +36,7 @@
     "hardhat": "^2.23.0",
     "vite": "^6.2.0"
   },
-  "description": "```markdown # 🛡️ ContentGuard - Blockchain-Based Copyright Registry & NFT Marketplace 111 Welcome to **ContentGuard**, a decentralized NFT marketplace that enables creators to mint, buy, sell, and trade digital assets such as artwork, music, and collectibles—while maintaining full control and copyright over their creations.",
+  "description": "ContentGuard - Blockchain-Based Copyright Registry & NFT Marketplace",
   "main": "eslint.config.js",
   "directories": {
     "test": "test"
@@ -45,7 +45,13 @@
     "type": "git",
     "url": "git+https://github.com/Guo-Yifei/contentguard-nft-marketplace.git"
   },
-  "keywords": [],
+  "keywords": [
+    "blockchain",
+    "nft",
+    "marketplace",
+    "ethereum",
+    "smart-contracts"
+  ],
   "author": "",
   "license": "ISC",
   "bugs": {

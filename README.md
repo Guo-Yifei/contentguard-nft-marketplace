@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🛡️ ContentGuard - Blockchain-Based Copyright Registry & NFT Marketplace
 
 Welcome to ContentGuard, a decentralized NFT marketplace that enables creators to mint, buy, sell, and trade digital assets such as artwork, music, and collectibles—while maintaining full control and copyright over their creations.
@@ -20,12 +21,28 @@ ContentGuard is designed as a decentralized dApp consisting of:
 - Smart Contracts (Solidity): Manage NFT logic, minting, ownership, and royalties
 - Blockchain Layer (Sepolia Testnet): Hosts and executes smart contracts
 - IPFS Storage: Stores digital assets and metadata off-chain
+=======
+# ContentGuard NFT Marketplace
+
+This project contains:
+- Solidity smart contracts (`NFT.sol`, `marketplace.sol`)
+- React frontend (Vite + ethers.js)
+
+---
+
+## Prerequisites
+
+- **Node.js v18** (recommended, use [nvm](https://github.com/nvm-sh/nvm) to manage versions)
+- **MetaMask** browser extension
+- **Git**
+>>>>>>> origin/Linyi
 
 ## 🔗 Deployed Contracts (Sepolia Testnet)
 
 - **Marketplace Contract**: [`0x29a0D29AF3139b033F03d097837BF7Cb3B55E154`](https://sepolia.etherscan.io/address/0x29a0D29AF3139b033F03d097837BF7Cb3B55E154)
 - **NFT Contract**: [`0xa487193DAa57808773Ec35F1EdB3E49d26195B1A`](https://sepolia.etherscan.io/address/0xa487193DAa57808773Ec35F1EdB3E49d26195B1A)
 
+<<<<<<< HEAD
 ## 🧰 Tech Stack
 
 - Frontend: React.js, Tailwind CSS, Ethers.js, React Router
@@ -54,11 +71,15 @@ cd contentguard-nft-marketplace
 ```
 
 2. Install Dependencies
+=======
+## 1. Install Dependencies
+>>>>>>> origin/Linyi
 
 ```bash
 npm install
 ```
 
+<<<<<<< HEAD
 3. Configure Environment
    Copy `.env.example` to `.env` and fill in your credentials:
 
@@ -69,15 +90,77 @@ ETHERSCAN_API_KEY=your_etherscan_api_key
 ```
 
 4. Start the Development Server
+=======
+---
+
+## 2. Compile Smart Contracts
+
+```bash
+npx hardhat clean
+npx hardhat compile
+```
+
+---
+
+## 3. Deploy Contracts
+
+### a) Deploy to Local Hardhat Network
+
+1. **Start local node** (in a new terminal):
+   ```npx hardhat node
+   ```
+2. **Deploy contracts** (in another terminal):
+   ```npx hardhat run scripts/deploy.cjs --network localhost
+   ```
+
+### b) Deploy to Sepolia Testnet
+
+1. In `hardhat.config.cjs`, set your Sepolia RPC and private key:
+   ```js
+   networks: {
+     sepolia: {
+       url: "https://eth-sepolia.public.blastapi.io",
+       accounts: ["YOUR_PRIVATE_KEY"]
+     }
+   }
+   ```
+2. **Deploy:**
+   ```
+   npx hardhat run scripts/deploy.cjs --network sepolia
+   ```
+3. **Note the deployed contract addresses** for frontend use.
+
+---
+
+## 4. Configure Frontend
+
+In `src/components/ContractInteraction.jsx`, update the contract addresses:
+
+```js
+const MARKETPLACE_ADDRESS = "your_marketplace_contract_address";
+const NFT_ADDRESS = "your_nft_contract_address";
+```
+
+---
+
+## 5. Run the Frontend
+>>>>>>> origin/Linyi
 
 ```bash
 npm run dev
 ```
 
+<<<<<<< HEAD
 Visit `http://localhost:5173/` in your browser.
+=======
+Open your browser and go to [http://localhost:5173](http://localhost:5173)
 
-## 📁 Project Structure
+---
+>>>>>>> origin/Linyi
 
+## 6. Common Issues
+
+<<<<<<< HEAD
 ```
 contentguard-nft-marketplace/
 ├── contracts/             # Solidity smart contracts
@@ -93,12 +176,31 @@ contentguard-nft-marketplace/
 ├── hardhat.config.cjs    # Hardhat configuration
 └── package.json
 ```
+=======
+- **JSX Syntax Error:**  
+  Make sure your React component files use the `.jsx` extension (e.g., `App.jsx`).
+
+- **MetaMask Connection:**  
+  Ensure MetaMask is on the same network as your contracts (localhost or Sepolia).
+
+- **Missing Dependencies:**  
+  If you see errors about `@openzeppelin/contracts`, run:
+  ```bash
+  npm install @openzeppelin/contracts
+  ```
+>>>>>>> origin/Linyi
 
 ## 🔄 Contract Interaction
 
+<<<<<<< HEAD
 ### Key Functions
 
 1. **NFT Contract**
+=======
+## 7. Get Sepolia Test ETH
+
+- [https://sepoliafaucet.com/](https://sepoliafaucet.com/)
+>>>>>>> origin/Linyi
 
    - `mintToken(tokenURI)`: Mint new NFT
    - `getTokensOwnedByMe()`: List owned NFTs
@@ -126,6 +228,7 @@ contentguard-nft-marketplace/
 - [ ] User dashboard
 - [ ] IPFS integration
 
+<<<<<<< HEAD
 ## 🤝 Contributing
 
 1. Create a feature branch: `git checkout -b feature/my-feature`
@@ -150,10 +253,13 @@ For questions or feedback, please reach out through:
 
 - GitHub Issues
 - Syracuse University channels
-
 ```
 
 ---
+=======
+If you have any questions, feel free to open an issue!
+>>>>>>> origin/Linyi
 
 
 ```
+
