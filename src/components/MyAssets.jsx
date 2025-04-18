@@ -49,6 +49,7 @@ const MyAssets = () => {
 
       // Get all NFTs owned by the user
       const tokenIds = await nftContract.getTokensOwnedByMe({ from: currentWalletAddress });
+      console.log('Owned token IDs:', tokenIds);
       
       // Get metadata for each NFT
       const ownedNFTs = await Promise.all(
@@ -67,11 +68,22 @@ const MyAssets = () => {
 
             // Check if NFT is already listed on marketplace
             const marketItems = await marketplaceContract.fetchAvailableMarketItems();
-            const marketItem = marketItems.find(item => 
-              item.tokenId.toString() === tokenId.toString() && 
-              !item.sold && 
-              !item.canceled
-            );
+            console.log('Market items:', marketItems);
+            
+            const marketItem = marketItems.find(item => {
+              const isMatch = item.tokenId.toString() === tokenId.toString() && 
+                !item.sold && 
+                !item.canceled;
+              console.log(`Checking token ${tokenId}:`, {
+                marketItemTokenId: item.tokenId.toString(),
+                isMatch,
+                isSold: item.sold,
+                isCanceled: item.canceled
+              });
+              return isMatch;
+            });
+
+            console.log(`Token ${tokenId} market item:`, marketItem);
 
             return {
               tokenId: tokenId.toString(),
@@ -80,7 +92,9 @@ const MyAssets = () => {
               imageUrl: imageUrl,
               isListed: !!marketItem,
               marketItemId: marketItem?.marketItemId,
-              price: marketItem ? ethers.formatEther(marketItem.price) : null
+              price: marketItem ? ethers.formatEther(marketItem.price) : null,
+              owner: marketItem?.owner,
+              isDisabled: marketItem?.owner.toLowerCase() === currentWalletAddress.toLowerCase() || !marketItem?.marketItemId
             };
           } catch (error) {
             console.error(`Error loading metadata for token ${tokenId}:`, error);
@@ -91,6 +105,7 @@ const MyAssets = () => {
 
       // Filter out any failed metadata fetches
       const validNFTs = ownedNFTs.filter(nft => nft !== null);
+      console.log('Valid NFTs:', validNFTs);
       setNfts(validNFTs);
     } catch (error) {
       console.error('Error loading NFTs:', error);
@@ -138,31 +153,19 @@ const MyAssets = () => {
       );
 
       // Approve marketplace to handle NFT
-      console.log('Approving marketplace to handle NFT...');
       const approveTx = await nftContract.approve(
         CONTRACT_ADDRESSES.sepolia.marketplace,
         selectedNFT.tokenId
       );
-      const approveReceipt = await approveTx.wait();
-      console.log('Approval transaction receipt:', approveReceipt);
-
-      // Check if approval was successful
-      const isApproved = await nftContract.getApproved(selectedNFT.tokenId);
-      console.log('NFT approved address:', isApproved);
-      if (isApproved.toLowerCase() !== CONTRACT_ADDRESSES.sepolia.marketplace.toLowerCase()) {
-        throw new Error('Failed to approve marketplace to handle NFT');
-      }
+      await approveTx.wait();
 
       // List NFT on marketplace
-      console.log('Creating market item...');
       const priceInWei = ethers.parseEther(listPrice);
-      console.log('Price in Wei:', priceInWei.toString());
-      
       const listTx = await marketplaceContract.createMarketItem(
         CONTRACT_ADDRESSES.sepolia.nft,
         selectedNFT.tokenId,
         priceInWei,
-        { value: priceInWei }  // Send ETH with the transaction equal to the listing price
+        { value: priceInWei }
       );
       await listTx.wait();
 
@@ -227,10 +230,9 @@ const MyAssets = () => {
                   <Button
                     type="primary"
                     onClick={() => handleListForSale(nft)}
-                    disabled={nft.isListed}
                     style={{ marginTop: '10px' }}
                   >
-                    {nft.isListed ? 'Already Listed' : 'List for Sale'}
+                    List for Sale
                   </Button>
                 </div>
               </Card>

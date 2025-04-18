@@ -6,6 +6,8 @@ import { CONTRACT_ADDRESSES } from '../contracts/config.js';
 import MARKETPLACE_ABI from '../contracts/Marketplace.json';
 import NFT_ABI from '../contracts/NFT.json';
 
+const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
+
 const NFTDetail = () => {
   const { id } = useParams();
   const [nft, setNft] = useState(null);
@@ -44,13 +46,20 @@ const NFTDetail = () => {
         provider
       );
 
-      // Get token owner
+      // Get token owner from NFT contract
       const owner = await nftContract.ownerOf(id);
       
       // Get token URI and metadata
       const tokenURI = await nftContract.tokenURI(id);
-      const metadataResponse = await fetch(tokenURI);
+      // Convert IPFS URI to HTTP URL
+      const httpURI = tokenURI.replace('ipfs://', IPFS_GATEWAY);
+      const metadataResponse = await fetch(httpURI);
       const metadata = await metadataResponse.json();
+
+      // Convert image URL if it's IPFS
+      const imageUrl = metadata.image.startsWith('ipfs://') 
+        ? metadata.image.replace('ipfs://', IPFS_GATEWAY)
+        : metadata.image;
 
       // Check if NFT is listed on marketplace
       const marketItems = await marketplaceContract.fetchAvailableMarketItems();
@@ -65,14 +74,21 @@ const NFTDetail = () => {
         setPrice(ethers.formatEther(marketItem.price));
       }
 
+      // Determine if user is the original owner
+      const isOriginalOwner = owner.toLowerCase() === currentWalletAddress.toLowerCase();
+      // Determine if NFT is listed
+      const isListed = !!marketItem;
+
       setNft({
         tokenId: id,
         title: metadata.name,
         description: metadata.description,
-        imageUrl: metadata.image,
+        imageUrl: imageUrl,
         owner: owner,
         marketItemId: marketItem?.marketItemId,
-        price: marketItem ? ethers.formatEther(marketItem.price) : null
+        price: marketItem ? ethers.formatEther(marketItem.price) : null,
+        isOriginalOwner,
+        isListed
       });
     } catch (error) {
       console.error('Error loading NFT:', error);
@@ -117,6 +133,38 @@ const NFTDetail = () => {
     }
   };
 
+  const handleWithdraw = async () => {
+    try {
+      if (!window.ethereum) {
+        throw new Error('Please install MetaMask to use this application');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      // Initialize marketplace contract
+      const marketplaceContract = new ethers.Contract(
+        CONTRACT_ADDRESSES.sepolia.marketplace,
+        MARKETPLACE_ABI.abi,
+        signer
+      );
+
+      // Cancel the listing
+      const tx = await marketplaceContract.cancelMarketItem(
+        CONTRACT_ADDRESSES.sepolia.nft,
+        marketItemId
+      );
+
+      // Wait for transaction to be mined
+      await tx.wait();
+      
+      // Refresh the page to update the UI
+      window.location.reload();
+    } catch (error) {
+      console.error('Error withdrawing NFT:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -129,7 +177,7 @@ const NFTDetail = () => {
     return <div>NFT not found or you don't have permission to view it.</div>;
   }
 
-  const isDisabled = nft.owner.toLowerCase() === walletAddress.toLowerCase() || !marketItemId;
+  const isDisabled = nft.isOriginalOwner || !nft.isListed;
 
   return (
     <div className="container mx-auto p-6">
@@ -153,22 +201,28 @@ const NFTDetail = () => {
         {price && <p className="text-lg font-bold mt-2">Price: {price} ETH</p>}
       </div>
       <button
-        onClick={handlePurchase}
-        disabled={isDisabled}
+        onClick={isDisabled ? handleWithdraw : handlePurchase}
+        disabled={!marketItemId}
         className={`px-4 py-2 rounded mt-4 ${
-          isDisabled
+          !marketItemId
             ? 'bg-gray-400 cursor-not-allowed'
             : 'bg-blue-600 hover:bg-blue-700'
         } text-white`}
         style={{ 
-          backgroundColor: isDisabled ? '#fff' : '#1890ff',
-          borderColor: isDisabled ? '#fff' : '#1890ff',
+          backgroundColor: !marketItemId ? '#fff' : '#1890ff',
+          borderColor: !marketItemId ? '#fff' : '#1890ff',
         }}
       >
-        {isDisabled ? 
-          (nft.owner.toLowerCase() === walletAddress.toLowerCase() ? 'You Own This' : 'Not Listed for Sale') : 
-          'Purchase'}
+        {!marketItemId ? 'Not Listed for Sale' : 
+         isDisabled ? 'Withdraw' : 'Purchase'}
       </button>
+      <div className="mt-2 text-sm text-gray-600">
+        {nft.isOriginalOwner && nft.isListed ? 
+          "You are the original owner. Click 'Withdraw' to remove from marketplace." :
+          nft.isListed ? 
+          "This NFT is listed for sale on the marketplace." :
+          "This NFT is not currently listed for sale."}
+      </div>
     </div>
   );
 };

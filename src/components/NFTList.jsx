@@ -44,15 +44,15 @@ const NFTList = () => {
         provider
       );
 
-      // Get all active market items
+      // Get all market items
       const marketItems = await marketplaceContract.fetchAvailableMarketItems();
       
-      // Get metadata for each listed NFT
-      const listedNFTs = await Promise.all(
+      // Get all NFTs
+      const nfts = await Promise.all(
         marketItems.map(async (item) => {
           try {
+            // Get token URI and metadata
             const tokenURI = await nftContract.tokenURI(item.tokenId);
-            // Convert IPFS URI to HTTP URL
             const httpURI = tokenURI.replace('ipfs://', IPFS_GATEWAY);
             const metadataResponse = await fetch(httpURI);
             const metadata = await metadataResponse.json();
@@ -62,31 +62,70 @@ const NFTList = () => {
               ? metadata.image.replace('ipfs://', IPFS_GATEWAY)
               : metadata.image;
 
+            // Get current owner from NFT contract
+            const owner = await nftContract.ownerOf(item.tokenId);
+            
+            // Determine if user is the original owner
+            const isOriginalOwner = owner.toLowerCase() === currentWalletAddress.toLowerCase();
+
             return {
-              tokenId: item.tokenId.toString(),
-              marketItemId: item.marketItemId.toString(),
+              tokenId: item.tokenId,
               title: metadata.name,
               description: metadata.description,
               imageUrl: imageUrl,
-              owner: item.owner,
-              seller: item.seller,
+              owner: owner,
+              marketItemId: item.marketItemId,
               price: ethers.formatEther(item.price),
-              isListed: true
+              isOriginalOwner,
+              isListed: true,
+              seller: item.seller
             };
           } catch (error) {
-            console.error(`Error loading metadata for token ${item.tokenId}:`, error);
+            console.error('Error loading NFT metadata:', error);
             return null;
           }
         })
       );
 
-      // Filter out any failed metadata fetches
-      const validNFTs = listedNFTs.filter(nft => nft !== null);
-      setNfts(validNFTs);
+      // Filter out any failed NFT loads
+      setNfts(nfts.filter(nft => nft !== null));
     } catch (error) {
       console.error('Error loading NFTs:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleButtonClick = async (nft) => {
+    if (nft.seller.toLowerCase() === walletAddress.toLowerCase()) {
+      // Handle withdraw
+      try {
+        if (!window.ethereum) {
+          throw new Error('Please install MetaMask to use this application');
+        }
+
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+
+        const marketplaceContract = new ethers.Contract(
+          CONTRACT_ADDRESSES.sepolia.marketplace,
+          MARKETPLACE_ABI.abi,
+          signer
+        );
+
+        const tx = await marketplaceContract.cancelMarketItem(
+          CONTRACT_ADDRESSES.sepolia.nft,
+          nft.marketItemId
+        );
+
+        await tx.wait();
+        loadNFTs();
+      } catch (error) {
+        console.error('Error withdrawing NFT:', error);
+      }
+    } else {
+      // Handle purchase
+      handlePurchase(nft);
     }
   };
 
@@ -136,12 +175,36 @@ const NFTList = () => {
                   </h2>
                   <p className="text-lg font-bold mb-2">Price: {nft.price} ETH</p>
                   <span className="text-xs text-gray-500" style={{marginRight:'30px'}}>
-                    Seller: {nft.seller.slice(0, 6)}...{nft.seller.slice(-4)}
+                    Seller: {nft.owner.slice(0, 6)}...{nft.owner.slice(-4)}
                   </span>
-                  <PurchaseButton
-                    nft={nft}
-                    buyerAddress={walletAddress}
-                  />
+                  <div className="flex flex-col items-center">
+                    <button
+                      onClick={() => handleButtonClick(nft)}
+                      disabled={nft.isOriginalOwner}
+                      className={`px-4 py-2 rounded mt-4 ${
+                        nft.isOriginalOwner
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : nft.seller.toLowerCase() === walletAddress.toLowerCase()
+                          ? 'bg-red-600 hover:bg-red-700'
+                          : 'bg-blue-600 hover:bg-blue-700'
+                      } text-white`}
+                      style={{ 
+                        backgroundColor: nft.isOriginalOwner 
+                          ? '#fff' 
+                          : nft.seller.toLowerCase() === walletAddress.toLowerCase()
+                          ? '#dc2626'
+                          : '#1890ff',
+                        borderColor: nft.isOriginalOwner 
+                          ? '#fff' 
+                          : nft.seller.toLowerCase() === walletAddress.toLowerCase()
+                          ? '#dc2626'
+                          : '#1890ff',
+                      }}
+                    >
+                      {nft.isOriginalOwner ? 'Your NFT' : 
+                       nft.seller.toLowerCase() === walletAddress.toLowerCase() ? 'Withdraw' : 'Purchase'}
+                    </button>
+                  </div>
                 </div>
               </Card>
             </Col>
