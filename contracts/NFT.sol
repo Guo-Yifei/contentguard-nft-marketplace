@@ -26,9 +26,6 @@ contract NFT is ERC721URIStorage {
         _creators[newItemId] = msg.sender;
         _setTokenURI(newItemId, tokenURI);
 
-        // Give the marketplace approval to transact NFTs between users
-        setApprovalForAll(marketplaceAddress, true);
-
         emit TokenMinted(newItemId, tokenURI, marketplaceAddress);
         return newItemId;
     }

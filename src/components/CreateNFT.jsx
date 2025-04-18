@@ -1,15 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, Form, Input, InputNumber, Button, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
-import { createNFT } from '../services/nftService';
+import { createNFT, initializeWeb3 } from '../services/nftService';
 
 const CreateNFT = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
+  const [isWeb3Initialized, setIsWeb3Initialized] = useState(false);
 
   const currentWalletAddress = localStorage.getItem('walletAddress');
+
+  useEffect(() => {
+    const initWeb3 = async () => {
+      try {
+        await initializeWeb3();
+        setIsWeb3Initialized(true);
+      } catch (error) {
+        message.error('Failed to initialize Web3: ' + error.message);
+      }
+    };
+
+    if (currentWalletAddress) {
+      initWeb3();
+    }
+  }, [currentWalletAddress]);
 
   const handleFileChange = (info) => {
     const file = info.file.originFileObj;
@@ -27,6 +43,11 @@ const CreateNFT = () => {
   
 
   const handleSubmit = async (values) => {
+    if (!isWeb3Initialized) {
+      message.error('Web3 is not initialized. Please try again.');
+      return;
+    }
+
     setLoading(true);
     try {
       if (!currentWalletAddress) {
