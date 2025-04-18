@@ -6,6 +6,7 @@ import { ethers } from 'ethers';
 import { CONTRACT_ADDRESSES } from '../contracts/config.js';
 import MARKETPLACE_ABI from '../contracts/Marketplace.json';
 import NFT_ABI from '../contracts/NFT.json';
+import { message } from 'antd';
 
 const { Title, Text } = Typography;
 const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
@@ -272,6 +273,57 @@ const NFTDetail = () => {
     }
   };
 
+  const handleListForSale = async () => {
+    try {
+      if (!window.ethereum) {
+        throw new Error('Please install MetaMask to use this application');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      // Initialize contracts
+      const marketplaceContract = new ethers.Contract(
+        CONTRACT_ADDRESSES.sepolia.marketplace,
+        MARKETPLACE_ABI.abi,
+        signer
+      );
+
+      const nftContract = new ethers.Contract(
+        CONTRACT_ADDRESSES.sepolia.nft,
+        NFT_ABI.abi,
+        signer
+      );
+
+      // Get listing fee
+      const listingFee = await marketplaceContract.getListingFee();
+
+      // Approve marketplace to handle NFT
+      const approveTx = await nftContract.approve(
+        CONTRACT_ADDRESSES.sepolia.marketplace,
+        id
+      );
+      await approveTx.wait();
+
+      // List NFT on marketplace
+      const priceInWei = ethers.parseEther('0.01'); // Default price
+      const listTx = await marketplaceContract.createMarketItem(
+        CONTRACT_ADDRESSES.sepolia.nft,
+        id,
+        priceInWei,
+        { value: listingFee }
+      );
+      await listTx.wait();
+
+      message.success('NFT listed for sale successfully!');
+      // Refresh the page to update the UI
+      window.location.reload();
+    } catch (error) {
+      console.error('Error listing NFT:', error);
+      message.error('Failed to list NFT: ' + error.message);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -331,17 +383,29 @@ const NFTDetail = () => {
               }
             />
             <div className="mt-6" style={{marginTop: '15px'}}>
-              <Button
-                type={isDisabled ? 'default' : 'primary'}
-                icon={<ShoppingCartOutlined />}
-                onClick={isDisabled ? handleWithdraw : handlePurchase}
-                disabled={!marketItemId}
-                size="large"
-                block
-              >
-                {!marketItemId ? 'Not Listed for Sale' : 
-                 isDisabled ? 'Withdraw' : 'Purchase'}
-              </Button>
+              {!nft.isListed && nft.isOriginalOwner ? (
+                <Button
+                  type="primary"
+                  icon={<TagOutlined />}
+                  onClick={handleListForSale}
+                  size="large"
+                  block
+                >
+                  List for Sale
+                </Button>
+              ) : (
+                <Button
+                  type={isDisabled ? 'default' : 'primary'}
+                  icon={<ShoppingCartOutlined />}
+                  onClick={isDisabled ? handleWithdraw : handlePurchase}
+                  disabled={!marketItemId}
+                  size="large"
+                  block
+                >
+                  {!marketItemId ? 'Not Listed for Sale' : 
+                   isDisabled ? 'Withdraw' : 'Purchase'}
+                </Button>
+              )}
             </div>
           </Card>
         </Col>

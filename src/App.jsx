@@ -54,34 +54,34 @@ function App() {
                 <div className="flex space-x-4">
                   <Menu theme="dark" defaultActive="1" className="el-menu-demo" mode="horizontal">
                     <Menu.Item index="1">
-                      <Link to="/" className="text-gray-300 hover:text-white">
-                        Marketplace
+                      <Link to="/" className="text-gray-300 hover:text-white font-extrabold">
+                        <span style={{ color: '#fff', fontWeight: '800' }}>Marketplace</span>
                       </Link>
                     </Menu.Item>
                     <Menu.Item index="2">
-                      <Link to="/create-nft" className="text-gray-300 hover:text-white">
-                        Create NFT
+                      <Link to="/create-nft" className="text-gray-300 hover:text-white font-extrabold">
+                        <span style={{ color: '#fff', fontWeight: '800' }}>Create NFT</span>
                       </Link>
                     </Menu.Item>
-                    <Menu.Item index="3"><Link to="/my-assets" className="text-gray-300 hover:text-white">
-                      My Assets
+                    <Menu.Item index="3"><Link to="/my-assets" className="text-gray-300 hover:text-white font-extrabold">
+                      <span style={{ color: '#fff', fontWeight: '800' }}>My Assets</span>
                     </Link></Menu.Item>
-                    <Menu.Item index="4"><Link to="/notifications" className="text-gray-300 hover:text-white">
-                      Cart
+                    <Menu.Item index="4"><Link to="/notifications" className="text-gray-300 hover:text-white font-extrabold">
+                    <span style={{ color: '#fff', fontWeight: '800' }}>Transactions</span>
                     </Link></Menu.Item>
 
                     <Menu.Item key="wallet" style={{ marginLeft: 'auto', cursor: 'default' }} disabled={false}>
-                      <span style={{ color: '#fff' }}>Wallet: </span>
-                      <span style={{ color: '#d97706' }}>{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
+                      <span style={{ color: '#fff', fontWeight: '800' }}>Wallet: </span>
+                      <span style={{ color: '#d97706', fontWeight: '800' }}>{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
                     </Menu.Item>
 
                     <Menu.Item key="balance" style={{ cursor: 'default' }} disabled={false}>
-                      <span style={{ color: '#fff' }}>Balance: </span>
-                      <span style={{ color: '#4ade80' }}>{balance} ETH</span>
+                      <span style={{ color: '#fff', fontWeight: '800' }}>Balance: </span>
+                      <span style={{ color: '#4ade80', fontWeight: '800' }}>{balance} ETH</span>
                     </Menu.Item>
 
                     <Menu.Item key="logout">
-                      <span onClick={handleLogout}>Logout</span>
+                      <span onClick={handleLogout} style={{ fontWeight: '800' }}>Logout</span>
                     </Menu.Item>
                   </Menu>
                 </div>
@@ -89,7 +89,7 @@ function App() {
             </div>
             <div className="flex items-center space-x-4">
               {walletAddress ? (<></>) : (
-                <Link to="/login" className="text-gray-300 hover:text-white">
+                <Link to="/login" className="text-gray-300 hover:text-white font-extrabold">
                   Connect Wallet
                 </Link>
               )}
@@ -124,9 +124,9 @@ function App() {
           </Routes>
         </main>
 
-        <footer className="bg-gray-800 text-white mt-12 py-8">
+        <footer className="bg-gray-800 text-white mt-12 py-8" style={{marginTop: '30px'}}>
           <div className="container mx-auto px-4 text-center">
-            <p>&copy; 2024 NFT Marketplace. All rights reserved.</p>
+            <p>&copy; 2025 NFT Marketplace. All rights reserved.</p>
           </div>
         </footer>
       </div>
