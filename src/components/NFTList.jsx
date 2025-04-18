@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
-import { Row, Col, Card } from 'antd';
+import { Row, Col, Card, Spin } from 'antd';
 import { Link } from 'react-router-dom';
-import { db } from '../firebase/config';
 import PurchaseButton from './PurchaseButton';
+import { ethers } from 'ethers';
+import { CONTRACT_ADDRESSES } from '../contracts/config.js';
+import MARKETPLACE_ABI from '../contracts/Marketplace.json';
+import NFT_ABI from '../contracts/NFT.json';
+
+const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
 
 const NFTList = () => {
   const [nfts, setNfts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [walletAddress, setWalletAddress] = useState('');
 
   useEffect(() => {
     loadNFTs();
@@ -15,12 +20,69 @@ const NFTList = () => {
 
   const loadNFTs = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, 'nfts'));
-      const nftList = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setNfts(nftList);
+      setLoading(true);
+      
+      if (!window.ethereum) {
+        throw new Error('Please install MetaMask to use this application');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const currentWalletAddress = await signer.getAddress();
+      setWalletAddress(currentWalletAddress);
+
+      // Initialize contracts
+      const marketplaceContract = new ethers.Contract(
+        CONTRACT_ADDRESSES.sepolia.marketplace,
+        MARKETPLACE_ABI.abi,
+        provider
+      );
+
+      const nftContract = new ethers.Contract(
+        CONTRACT_ADDRESSES.sepolia.nft,
+        NFT_ABI.abi,
+        provider
+      );
+
+      // Get all active market items
+      const marketItems = await marketplaceContract.fetchAvailableMarketItems();
+      
+      // Get metadata for each listed NFT
+      const listedNFTs = await Promise.all(
+        marketItems.map(async (item) => {
+          try {
+            const tokenURI = await nftContract.tokenURI(item.tokenId);
+            // Convert IPFS URI to HTTP URL
+            const httpURI = tokenURI.replace('ipfs://', IPFS_GATEWAY);
+            const metadataResponse = await fetch(httpURI);
+            const metadata = await metadataResponse.json();
+
+            // Convert image URL if it's IPFS
+            const imageUrl = metadata.image.startsWith('ipfs://') 
+              ? metadata.image.replace('ipfs://', IPFS_GATEWAY)
+              : metadata.image;
+
+            return {
+              tokenId: item.tokenId.toString(),
+              marketItemId: item.marketItemId.toString(),
+              title: metadata.name,
+              description: metadata.description,
+              imageUrl: imageUrl,
+              owner: item.owner,
+              seller: item.seller,
+              price: ethers.formatEther(item.price),
+              isListed: true
+            };
+          } catch (error) {
+            console.error(`Error loading metadata for token ${item.tokenId}:`, error);
+            return null;
+          }
+        })
+      );
+
+      // Filter out any failed metadata fetches
+      const validNFTs = listedNFTs.filter(nft => nft !== null);
+      setNfts(validNFTs);
     } catch (error) {
       console.error('Error loading NFTs:', error);
     } finally {
@@ -28,25 +90,32 @@ const NFTList = () => {
     }
   };
 
-  if (loading) return (
-    <div className="flex justify-center items-center min-h-[400px]">
-      <div className="text-xl">Loading NFTs...</div>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-8">NFT Marketplace</h1>
-      <Row gutter={[24, 24]}>
-        {nfts.map((nft) => (
-          <Col span={8} key={nft.id}>
+      {nfts.length === 0 ? (
+        <div className="text-center text-xl mt-8">
+          No NFTs listed for sale.
+        </div>
+      ) : (
+        <Row gutter={[24, 24]}>
+          {nfts.map((nft) => (
+            <Col span={8} key={nft.tokenId}>
               <Card
                 hoverable
                 style={{
                   margin: '30px',
                 }}
               >
-                <Link to={`/nft/${nft.id}`}>
+                <Link to={`/nft/${nft.tokenId}`}>
                   <img
                     src={nft.imageUrl || '/placeholder.png'}
                     alt={nft.title}
@@ -67,17 +136,18 @@ const NFTList = () => {
                   </h2>
                   <p className="text-lg font-bold mb-2">Price: {nft.price} ETH</p>
                   <span className="text-xs text-gray-500" style={{marginRight:'30px'}}>
-                    Owner: {nft.owner.slice(0, 6)}...{nft.owner.slice(-4)}
+                    Seller: {nft.seller.slice(0, 6)}...{nft.seller.slice(-4)}
                   </span>
                   <PurchaseButton
                     nft={nft}
-                    buyerAddress={localStorage.getItem('walletAddress')}
+                    buyerAddress={walletAddress}
                   />
                 </div>
               </Card>
-          </Col>
-        ))}
-      </Row>
+            </Col>
+          ))}
+        </Row>
+      )}
     </div>
   );
 };

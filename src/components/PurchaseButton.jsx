@@ -1,58 +1,60 @@
-import React, { useState, useEffect } from 'react';
-import { createPurchaseRequest } from '../services/transactionService';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import React, { useState } from 'react';
+import { ethers } from 'ethers';
+import { CONTRACT_ADDRESSES } from '../contracts/config.js';
+import MARKETPLACE_ABI from '../contracts/Marketplace.json';
+import { message } from 'antd';
 
 const PurchaseButton = ({ nft, buyerAddress }) => {
   const [loading, setLoading] = useState(false);
-  const [hasPendingRequest, setHasPendingRequest] = useState(false);
 
-  // 检查是否存在待处理的购买请求
-  useEffect(() => {
-    const checkPendingRequest = async () => {
-      try {
-        const q = query(
-          collection(db, 'transactions'),
-          where('nftId', '==', nft.id),
-          where('buyer', '==', buyerAddress),
-          where('status', '==', 'pending')
-        );
-        
-        const querySnapshot = await getDocs(q);
-        setHasPendingRequest(!querySnapshot.empty);
-      } catch (error) {
-        console.error('Error checking pending request:', error);
-      }
-    };
-
-    checkPendingRequest();
-  }, [nft.id, buyerAddress]);
-
-  const handlePurchaseRequest = async () => {
-    setLoading(true);
+  const handlePurchase = async () => {
     try {
-      await createPurchaseRequest(
-        nft.id,
-        buyerAddress,
-        nft.owner,
-        nft.price
-      );
-      setHasPendingRequest(true);
+      setLoading(true);
+      
+      if (!window.ethereum) {
+        throw new Error('Please install MetaMask to use this application');
+      }
 
-      alert('Purchase successfully!');
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      // Initialize marketplace contract
+      const marketplaceContract = new ethers.Contract(
+        CONTRACT_ADDRESSES.sepolia.marketplace,
+        MARKETPLACE_ABI.abi,
+        signer
+      );
+
+      // Get the price in wei
+      const priceInWei = ethers.parseEther(nft.price);
+
+      // Create market sale
+      const tx = await marketplaceContract.createMarketSale(
+        CONTRACT_ADDRESSES.sepolia.nft, // NFT contract address
+        nft.marketItemId, // Market item ID
+        { value: priceInWei } // Send ETH with the transaction
+      );
+
+      // Wait for transaction to be mined
+      await tx.wait();
+      
+      message.success('NFT purchased successfully!');
+      // Refresh the page to update the UI
+      window.location.reload();
     } catch (error) {
-      alert('Error sending purchase request: ' + error.message);
+      console.error('Error purchasing NFT:', error);
+      message.error('Failed to purchase NFT: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // 如果是NFT拥有者或已有待处理请求，则禁用按钮
-  const isDisabled = loading || nft.owner === buyerAddress || hasPendingRequest;
+  // Disable button if user is the owner
+  const isDisabled = loading || nft.owner.toLowerCase() === buyerAddress.toLowerCase();
 
   return (
     <button
-      onClick={handlePurchaseRequest}
+      onClick={handlePurchase}
       disabled={isDisabled}
       className={`px-4 py-2 rounded ${
         isDisabled
@@ -64,9 +66,8 @@ const PurchaseButton = ({ nft, buyerAddress }) => {
         borderColor: isDisabled ? '#fff' : '#1890ff',
       }}
     >
-      {loading ? 'Sending Request...' : 
-       hasPendingRequest ? 'Request Pending' : 
-       nft.owner === buyerAddress ? 'You Own This' : 
+      {loading ? 'Purchasing...' : 
+       nft.owner.toLowerCase() === buyerAddress.toLowerCase() ? 'You Own This' : 
        'Purchase'}
     </button>
   );
