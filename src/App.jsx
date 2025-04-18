@@ -11,20 +11,36 @@ import WalletLogin from './components/WalletLogin'
 import ProtectedRoute from './components/ProtectedRoute'
 import MyAssets from './components/MyAssets'
 import NFTDetail from './components/NFTDetail'
+import { ethers } from 'ethers'
 
 function App() {
   const [walletAddress, setWalletAddress] = useState('');
+  const [balance, setBalance] = useState('0');
 
   useEffect(() => {
     const storedWallet = localStorage.getItem('walletAddress');
     if (storedWallet) {
       setWalletAddress(storedWallet);
+      fetchBalance(storedWallet);
     }
   }, []);
+
+  const fetchBalance = async (address) => {
+    try {
+      if (!window.ethereum) return;
+      
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const balance = await provider.getBalance(address);
+      setBalance(Number(ethers.formatEther(balance)).toFixed(5));
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('walletAddress');
     setWalletAddress('');
+    setBalance('0');
     window.location.reload();
   };
 
@@ -36,7 +52,6 @@ function App() {
             <div className="flex items-center space-x-8">
               {walletAddress && (
                 <div className="flex space-x-4">
-
                   <Menu theme="dark" defaultActive="1" className="el-menu-demo" mode="horizontal">
                     <Menu.Item index="1">
                       <Link to="/" className="text-gray-300 hover:text-white">
@@ -55,15 +70,20 @@ function App() {
                       Cart
                     </Link></Menu.Item>
 
-                    <Menu.Item key="wallet" style={{ marginLeft: 'auto', color: '#fff', cursor: 'default' }} disabled={false}>
-                      Wallet: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                    <Menu.Item key="wallet" style={{ marginLeft: 'auto', cursor: 'default' }} disabled={false}>
+                      <span style={{ color: '#fff' }}>Wallet: </span>
+                      <span style={{ color: '#d97706' }}>{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
+                    </Menu.Item>
+
+                    <Menu.Item key="balance" style={{ cursor: 'default' }} disabled={false}>
+                      <span style={{ color: '#fff' }}>Balance: </span>
+                      <span style={{ color: '#4ade80' }}>{balance} ETH</span>
                     </Menu.Item>
 
                     <Menu.Item key="logout">
                       <span onClick={handleLogout}>Logout</span>
                     </Menu.Item>
                   </Menu>
-
                 </div>
               )}
             </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Spin } from 'antd';
+import { Row, Col, Card, Spin, Button } from 'antd';
 import { Link } from 'react-router-dom';
+import { EyeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import PurchaseButton from './PurchaseButton';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESSES } from '../contracts/config.js';
@@ -183,65 +184,57 @@ const NFTList = () => {
       ) : (
         <Row gutter={[24, 24]}>
           {nfts.map((nft) => (
-            <Col span={8} key={nft.tokenId}>
+            <Col xs={24} sm={12} md={8} lg={6} key={nft.tokenId}>
               <Card
                 hoverable
-                style={{
-                  margin: '30px',
-                }}
+                cover={
+                  <Link to={`/nft/${nft.tokenId}`}>
+                    <div style={{ height: '300px', overflow: 'hidden' }}>
+                      <img
+                        src={nft.imageUrl || '/placeholder.png'}
+                        alt={nft.title}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/placeholder.png';
+                        }}
+                      />
+                    </div>
+                  </Link>
+                }
+                actions={[
+                  <Link to={`/nft/${nft.tokenId}`} key="view">
+                    <EyeOutlined /> View
+                  </Link>,
+                  <Button
+                    type={nft.seller.toLowerCase() === walletAddress.toLowerCase() ? 'danger' : 'primary'}
+                    icon={<ShoppingCartOutlined />}
+                    onClick={() => handleButtonClick(nft)}
+                    disabled={nft.isOriginalOwner}
+                    key="buy"
+                  >
+                    {nft.isOriginalOwner ? 'Your NFT' : 
+                     nft.seller.toLowerCase() === walletAddress.toLowerCase() ? 'Withdraw' : 'Purchase'}
+                  </Button>
+                ]}
               >
-                <Link to={`/nft/${nft.tokenId}`}>
-                  <img
-                    src={nft.imageUrl || '/placeholder.png'}
-                    alt={nft.title}
-                    style={{
-                      width: '300px',
-                      height: '300px',
-                      objectFit: 'cover',
-                    }}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = '/placeholder.png';
-                    }}
-                  />
-                </Link>
-                <div style={{ padding: 14 }}>
-                  <h2 className="text-lg font-semibold mb-1 truncate" title={nft.title}>
-                    {nft.title}
-                  </h2>
-                  <p className="text-lg font-bold mb-2">Price: {nft.price} ETH</p>
-                  <span className="text-xs text-gray-500" style={{marginRight:'30px'}}>
-                    Seller: {nft.seller.slice(0, 6)}...{nft.seller.slice(-4)}
-                  </span>
-                  <div className="flex flex-col items-center">
-                    <button
-                      onClick={() => handleButtonClick(nft)}
-                      disabled={nft.isOriginalOwner}
-                      className={`px-4 py-2 rounded mt-4 ${
-                        nft.isOriginalOwner
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : nft.seller.toLowerCase() === walletAddress.toLowerCase()
-                          ? 'bg-red-600 hover:bg-red-700'
-                          : 'bg-blue-600 hover:bg-blue-700'
-                      } text-white`}
-                      style={{ 
-                        backgroundColor: nft.isOriginalOwner 
-                          ? '#fff' 
-                          : nft.seller.toLowerCase() === walletAddress.toLowerCase()
-                          ? '#dc2626'
-                          : '#1890ff',
-                        borderColor: nft.isOriginalOwner 
-                          ? '#fff' 
-                          : nft.seller.toLowerCase() === walletAddress.toLowerCase()
-                          ? '#dc2626'
-                          : '#1890ff',
-                      }}
-                    >
-                      {nft.isOriginalOwner ? 'Your NFT' : 
-                       nft.seller.toLowerCase() === walletAddress.toLowerCase() ? 'Withdraw' : 'Purchase'}
-                    </button>
-                  </div>
-                </div>
+                <Card.Meta
+                  title={nft.title}
+                  description={
+                    <div>
+                      <div className="text-lg font-bold text-blue-600 mb-2">
+                        {nft.price} ETH
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Seller: {nft.seller.slice(0, 6)}...{nft.seller.slice(-4)}
+                      </div>
+                    </div>
+                  }
+                />
               </Card>
             </Col>
           ))}

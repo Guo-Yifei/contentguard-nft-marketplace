@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Row, Col, Card, Spin, Input, Button, Modal, message } from 'antd';
+import { EyeOutlined, TagOutlined } from '@ant-design/icons';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESSES } from '../contracts/config.js';
 import MARKETPLACE_ABI from '../contracts/Marketplace.json';
@@ -198,43 +199,57 @@ const MyAssets = () => {
       ) : (
         <Row gutter={[24, 24]}>
           {nfts.map((nft) => (
-            <Col span={8} key={nft.tokenId}>
+            <Col xs={24} sm={12} md={8} lg={6} key={nft.tokenId}>
               <Card
                 hoverable
-                style={{
-                  margin: '30px',
-                }}
-              >
-                <Link to={`/nft/${nft.tokenId}`}>
-                  <img
-                    src={nft.imageUrl || '/placeholder.png'}
-                    alt={nft.title}
-                    style={{
-                      width: '300px',
-                      height: '300px',
-                      objectFit: 'cover',
-                    }}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = '/placeholder.png';
-                    }}
-                  />
-                </Link>
-                <div style={{ padding: 14 }}>
-                  <h2 className="text-lg font-semibold mb-1 truncate" title={nft.title}>
-                    {nft.title}
-                  </h2>
-                  {nft.isListed && (
-                    <p className="text-lg font-bold mb-2">Listed for: {nft.price} ETH</p>
-                  )}
+                cover={
+                  <Link to={`/nft/${nft.tokenId}`}>
+                    <div style={{ height: '300px', overflow: 'hidden' }}>
+                      <img
+                        src={nft.imageUrl || '/placeholder.png'}
+                        alt={nft.title}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/placeholder.png';
+                        }}
+                      />
+                    </div>
+                  </Link>
+                }
+                actions={[
+                  <Link to={`/nft/${nft.tokenId}`} key="view">
+                    <EyeOutlined /> View
+                  </Link>,
                   <Button
                     type="primary"
+                    icon={<TagOutlined />}
                     onClick={() => handleListForSale(nft)}
-                    style={{ marginTop: '10px' }}
+                    key="list"
                   >
-                    List for Sale
+                    List
                   </Button>
-                </div>
+                ]}
+              >
+                <Card.Meta
+                  title={nft.title}
+                  description={
+                    <div>
+                      {nft.isListed && (
+                        <div className="text-lg font-bold text-blue-600 mb-2">
+                          Listed for: {nft.price} ETH
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-500">
+                        Token ID: #{nft.tokenId}
+                      </div>
+                    </div>
+                  }
+                />
               </Card>
             </Col>
           ))}
