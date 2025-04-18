@@ -1,19 +1,87 @@
-import React, { useEffect, useState } from 'react';
-import { getUserTransactions, handleTransaction } from '../services/transactionService';
+import React, { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
+import { Table, Select } from 'antd';
+import { CONTRACT_ADDRESSES } from '../contracts/config.js';
+import MARKETPLACE_ABI from '../contracts/Marketplace.json';
+import NFT_ABI from '../contracts/NFT.json';
 
-const TransactionNotifications = ({ userAddress }) => {
+const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
+
+const TransactionHistory = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all'); // 'all', 'buying', 'selling'
+  const [activeTab, setActiveTab] = useState('all');
+  const [walletAddress, setWalletAddress] = useState('');
 
   useEffect(() => {
     loadTransactions();
-  }, [userAddress]);
+  }, []);
 
   const loadTransactions = async () => {
     try {
-      const userTxs = await getUserTransactions(userAddress);
-      setTransactions(userTxs);
+      setLoading(true);
+      
+      if (!window.ethereum) {
+        throw new Error('Please install MetaMask to use this application');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const currentWalletAddress = await signer.getAddress();
+      setWalletAddress(currentWalletAddress);
+
+      // Initialize contracts
+      const marketplaceContract = new ethers.Contract(
+        CONTRACT_ADDRESSES.sepolia.marketplace,
+        MARKETPLACE_ABI.abi,
+        provider
+      );
+
+      const nftContract = new ethers.Contract(
+        CONTRACT_ADDRESSES.sepolia.nft,
+        NFT_ABI.abi,
+        provider
+      );
+
+      // Get all market items
+      const marketItems = await marketplaceContract.fetchAvailableMarketItems();
+      
+      // Get transaction history
+      const transactionHistory = await Promise.all(
+        marketItems.map(async (item) => {
+          try {
+            // Get NFT metadata
+            const tokenURI = await nftContract.tokenURI(item.tokenId);
+            const httpURI = tokenURI.replace('ipfs://', IPFS_GATEWAY);
+            const metadataResponse = await fetch(httpURI);
+            const metadata = await metadataResponse.json();
+
+            // Convert image URL if it's IPFS
+            const imageUrl = metadata.image.startsWith('ipfs://') 
+              ? metadata.image.replace('ipfs://', IPFS_GATEWAY)
+              : metadata.image;
+
+            return {
+              key: item.marketItemId.toString(),
+              id: item.marketItemId,
+              nftId: item.tokenId,
+              title: metadata.name,
+              imageUrl: imageUrl,
+              price: ethers.formatEther(item.price),
+              seller: item.seller,
+              buyer: item.owner,
+              status: item.sold ? 'completed' : 'pending',
+              role: item.seller.toLowerCase() === currentWalletAddress.toLowerCase() ? 'seller' : 'buyer',
+              timestamp: new Date().toISOString()
+            };
+          } catch (error) {
+            console.error('Error loading transaction:', error);
+            return null;
+          }
+        })
+      );
+
+      setTransactions(transactionHistory.filter(tx => tx !== null));
     } catch (error) {
       console.error('Error loading transactions:', error);
     } finally {
@@ -21,161 +89,112 @@ const TransactionNotifications = ({ userAddress }) => {
     }
   };
 
-  const handleTransactionResponse = async (transactionId, approved) => {
-    try {
-      await handleTransaction(transactionId, approved);
-      
-      // 刷新交易列表
-      loadTransactions();
-      
-      alert(
-        approved 
-          ? 'Transaction completed successfully! NFT ownership has been transferred.' 
-          : 'Transaction rejected successfully!'
-      );
-    } catch (error) {
-      alert('Error processing transaction: ' + error.message);
-    }
-  };
+  const columns = [
+    {
+      title: 'NFT',
+      dataIndex: 'imageUrl',
+      key: 'nft',
+      width: 70,
+      render: (imageUrl) => (
+        <img
+          src={imageUrl}
+          alt="NFT"
+          className="h-8 w-8 object-cover rounded"
+          style={{width: '30px', height: '30px'}}
+        />
+      ),
+    },
+    {
+      title: 'Title',
+      dataIndex: 'title',
+      key: 'title',
+      width: 150,
+    },
+    {
+      title: 'Owner',
+      dataIndex: 'buyer',
+      key: 'owner',
+      render: (buyer, record) => (
+        record.role === 'seller' 
+          ? `${buyer.slice(0, 6)}...${buyer.slice(-4)}`
+          : `${record.seller.slice(0, 6)}...${record.seller.slice(-4)}`
+      ),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => (
+        <span className={`px-2 py-1 rounded text-xs ${
+          status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+        }`}>
+          {status.charAt(0).toUpperCase() + status.slice(1)}
+        </span>
+      ),
+    },
+    {
+      title: 'Price (ETH)',
+      dataIndex: 'price',
+      key: 'price',
+      sorter: (a, b) => a.price - b.price,
+    },
+    {
+      title: 'Role',
+      dataIndex: 'role',
+      key: 'role',
+      render: (role) => role.charAt(0).toUpperCase() + role.slice(1),
+    },
+    {
+      title: 'Time',
+      dataIndex: 'timestamp',
+      key: 'time',
+      render: (timestamp) => new Date(timestamp).toLocaleString(),
+      sorter: (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
+    },
+  ];
 
   const filteredTransactions = transactions.filter(tx => {
+    if (activeTab === 'all') return true;
     if (activeTab === 'buying') return tx.role === 'buyer';
     if (activeTab === 'selling') return tx.role === 'seller';
     return true;
   });
 
-  const getStatusBadgeClass = (status) => {
-    const baseClass = 'px-2 py-1 rounded text-sm font-medium';
-    switch (status) {
-      case 'pending':
-        return `${baseClass} bg-yellow-100 text-yellow-800`;
-      case 'approved':
-        return `${baseClass} bg-green-100 text-green-800`;
-      case 'rejected':
-        return `${baseClass} bg-red-100 text-red-800`;
-      default:
-        return `${baseClass} bg-gray-100 text-gray-800`;
-    }
-  };
-
-  if (loading) return <div>Loading transactions...</div>;
+  const filterOptions = [
+    { value: 'all', label: 'All Transactions' },
+    { value: 'buying', label: 'Buying' },
+    { value: 'selling', label: 'Selling' },
+  ];
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-6">My Cart</h2>
-      
-      {/* 标签切换 */}
-      <div className="flex space-x-4 mb-6">
-        <button
-          onClick={() => setActiveTab('all')}
-          className={`px-4 py-2 rounded ${
-            activeTab === 'all' 
-              ? 'bg-blue-600 text-white' 
-              : 'bg-gray-200 text-gray-700'
-          }`}
-          style={{ 
-            backgroundColor: '#B2FBA5',
-            borderColor: '#1890ff',
-            marginRight: '15px',
-            width: '60px',
-            height: '30px',
-          }}
-        >
-          All
-        </button>
-        <button
-          onClick={() => setActiveTab('buying')}
-          className={`px-4 py-2 rounded ${
-            activeTab === 'buying' 
-              ? 'bg-blue-600 text-white' 
-              : 'bg-gray-200 text-gray-700'
-          }`}
-          style={{ 
-            backgroundColor: '#FFC300',
-            borderColor: '#1890ff',
-            marginRight: '15px',
-            width: '60px',
-            height: '30px',
-          }}
-        >
-          Buying
-        </button>
-        <button
-          onClick={() => setActiveTab('selling')}
-          className={`px-4 py-2 rounded ${
-            activeTab === 'selling' 
-              ? 'bg-blue-600 text-white' 
-              : 'bg-gray-200 text-gray-700'
-          }`}
-          style={{ 
-            backgroundColor: '#FFA07A',
-            borderColor: '#1890ff',
-            marginRight: '15px',
-            width: '60px',
-            height: '30px',
-          }}
-        >
-          Selling
-        </button>
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Transaction History</h2>
+        <Select
+          defaultValue="all"
+          value={activeTab}
+          onChange={setActiveTab}
+          options={filterOptions}
+          style={{ width: 150, marginBottom: '12px' }}
+          size="large"
+        />
       </div>
 
-      {filteredTransactions.length === 0 ? (
-        <p>No transactions found</p>
-      ) : (
-        <div className="space-y-4">
-          {filteredTransactions.map(transaction => (
-            <div key={transaction.id} className="border p-4 rounded shadow" style={{margin: '50px',}}>
-              <div className="flex justify-between items-center mb-4">
-                <div style={{border:'2px solid lightgray', width: '400px',height:'180px', marginLeft: '19%',}}>
-                  <div style={{textAlign:'left', paddingLeft: '30px',}}>
-                    <p className="font-medium">NFT ID: {transaction.nftId}</p>
-                    <p className="text-sm text-gray-500">
-                      {transaction.role === 'buyer' ? 'Buying from: ' : 'Selling to: '}
-                      {transaction.role === 'buyer' 
-                        ? transaction.seller.slice(0, 6) + '...' + transaction.seller.slice(-4)
-                        : transaction.buyer.slice(0, 6) + '...' + transaction.buyer.slice(-4)
-                      }
-                    </p>
-                    <p className="text-sm text-gray-500">Price: {transaction.price} ETH</p>
-                  </div>
-                  <span className={getStatusBadgeClass(transaction.status)} style={{
-                    color: transaction.status === 'pending' ? 'red' : 'green',
-                  }}>
-                    {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                  </span>
-                </div>
-              </div>
-
-              {transaction.role === 'buyer' && transaction.status === 'pending' && (
-                <div className="mt-4">
-                  <p className="text-sm text-gray-600 mb-2" color='red'>
-                    Do you want to approve this transaction?
-                  </p>
-                  <div className="flex space-x-4">
-                    <button
-                      onClick={() => handleTransactionResponse(transaction.id, true)}
-                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex-1"
-                      style={{ 
-                        marginRight: '15px',
-                      }}
-                    >
-                      Approve & Transfer NFT
-                    </button>
-                    <button
-                      onClick={() => handleTransactionResponse(transaction.id, false)}
-                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex-1"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      <Table
+        className="mt-12"
+        dataSource={filteredTransactions}
+        columns={columns}
+        loading={loading}
+        pagination={{
+          position: ['bottomCenter'],
+          pageSize: 10,
+        }}
+        bordered
+        size="middle"
+        scroll={{ x: true }}
+      />
     </div>
   );
 };
 
-export default TransactionNotifications; 
+export default TransactionHistory; 

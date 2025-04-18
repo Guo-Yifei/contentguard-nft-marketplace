@@ -74,11 +74,11 @@ const NFTList = () => {
               description: metadata.description,
               imageUrl: imageUrl,
               owner: owner,
+              seller: item.seller,
               marketItemId: item.marketItemId,
               price: ethers.formatEther(item.price),
               isOriginalOwner,
-              isListed: true,
-              seller: item.seller
+              isListed: true
             };
           } catch (error) {
             console.error('Error loading NFT metadata:', error);
@@ -129,6 +129,42 @@ const NFTList = () => {
     }
   };
 
+  const handlePurchase = async (nft) => {
+    try {
+      if (!window.ethereum) {
+        throw new Error('Please install MetaMask to use this application');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      // Initialize marketplace contract
+      const marketplaceContract = new ethers.Contract(
+        CONTRACT_ADDRESSES.sepolia.marketplace,
+        MARKETPLACE_ABI.abi,
+        signer
+      );
+
+      // Convert price to wei (smallest unit of ETH)
+      const priceInWei = ethers.parseEther(nft.price);
+
+      // Create market sale with the price in ETH
+      const tx = await marketplaceContract.createMarketSale(
+        CONTRACT_ADDRESSES.sepolia.nft,
+        nft.marketItemId,
+        { value: priceInWei } // Send ETH with the transaction
+      );
+
+      // Wait for transaction to be mined
+      await tx.wait();
+      
+      // Refresh the NFTs list
+      loadNFTs();
+    } catch (error) {
+      console.error('Error purchasing NFT:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -175,7 +211,7 @@ const NFTList = () => {
                   </h2>
                   <p className="text-lg font-bold mb-2">Price: {nft.price} ETH</p>
                   <span className="text-xs text-gray-500" style={{marginRight:'30px'}}>
-                    Seller: {nft.owner.slice(0, 6)}...{nft.owner.slice(-4)}
+                    Seller: {nft.seller.slice(0, 6)}...{nft.seller.slice(-4)}
                   </span>
                   <div className="flex flex-col items-center">
                     <button
