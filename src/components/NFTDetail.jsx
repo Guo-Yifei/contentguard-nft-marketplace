@@ -375,7 +375,7 @@ const NFTDetail = () => {
                   )}
                   <div className="flex items-center space-x-2" style={{marginTop: '15px'}}>
                     <WalletOutlined />
-                    <Text type="secondary">
+                    <Text type="secondary" style={{marginLeft: '10px'}}>
                       Owner: {nft.owner.slice(0, 6)}...{nft.owner.slice(-4)}
                     </Text>
                   </div>

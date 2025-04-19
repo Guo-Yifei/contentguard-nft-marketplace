@@ -87,13 +87,6 @@ function App() {
                 </div>
               )}
             </div>
-            <div className="flex items-center space-x-4">
-              {walletAddress ? (<></>) : (
-                <Link to="/login" className="text-gray-300 hover:text-white font-extrabold">
-                  Connect Wallet
-                </Link>
-              )}
-            </div>
           </div>
         </nav>
 
