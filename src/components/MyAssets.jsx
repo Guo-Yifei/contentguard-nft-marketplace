@@ -162,11 +162,12 @@ const MyAssets = () => {
 
       // List NFT on marketplace
       const priceInWei = ethers.parseEther(listPrice);
+      const listingFee = await marketplaceContract.getListingFee();
       const listTx = await marketplaceContract.createMarketItem(
         CONTRACT_ADDRESSES.sepolia.nft,
         selectedNFT.tokenId,
         priceInWei,
-        { value: priceInWei }
+        { value: listingFee }
       );
       await listTx.wait();
 
