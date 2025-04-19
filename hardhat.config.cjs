@@ -1,7 +1,7 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("dotenv").config();
 
-/** @type import('hardhat/config').HardhatUserConfig */
+/** @type {import('hardhat/config').HardhatUserConfig} */
 module.exports = {
   solidity: {
     compilers: [
@@ -38,18 +38,14 @@ module.exports = {
     },
     localhost: {
       url: "http://127.0.0.1:8545",
+      chainId: 31337,
     },
     sepolia: {
-      url:
-        process.env.SEPOLIA_RPC_URL || "https://eth-sepolia.public.blastapi.io",
+      url: process.env.SEPOLIA_RPC_URL || "",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      timeout: 60000,
-      gasPrice: 3000000000,
-      confirmations: 2,
-      networkId: 11155111,
     },
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: process.env.ETHERSCAN_API_KEY || "",
   },
 };

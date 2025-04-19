@@ -23,6 +23,7 @@ describe("Lock", function () {
 
     const Lock = await ethers.getContractFactory("Lock");
     const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+    await lock.waitForDeployment();
 
     return { lock, unlockTime, lockedAmount, owner, otherAccount };
   }
@@ -45,7 +46,8 @@ describe("Lock", function () {
         deployOneYearLockFixture
       );
 
-      expect(await ethers.provider.getBalance(lock.target)).to.equal(
+      const lockAddress = await lock.getAddress();
+      expect(await ethers.provider.getBalance(lockAddress)).to.equal(
         lockedAmount
       );
     });
@@ -118,8 +120,9 @@ describe("Lock", function () {
 
         await time.increaseTo(unlockTime);
 
+        const lockAddress = await lock.getAddress();
         await expect(lock.withdraw()).to.changeEtherBalances(
-          [owner, lock],
+          [owner, lockAddress],
           [lockedAmount, -lockedAmount]
         );
       });

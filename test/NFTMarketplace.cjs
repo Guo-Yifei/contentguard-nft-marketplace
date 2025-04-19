@@ -38,7 +38,24 @@ describe("NFT Marketplace", function () {
     it("Should create a market item", async function () {
       const tokenURI = "https://example.com/token/1";
       await nft.connect(addr1).mintToken(tokenURI);
-      // 添加更多测试...
+      const nftAddress = await nft.getAddress();
+
+      // 获取上市费用
+      const listingFee = await marketplace.getListingFee();
+
+      // 设置 NFT 售价
+      const price = ethers.parseEther("1");
+
+      // addr1 创建市场项目
+      await marketplace.connect(addr1).createMarketItem(nftAddress, 1, price, {
+        value: listingFee,
+      });
+
+      // 验证市场项目已创建
+      const items = await marketplace.fetchAvailableMarketItems();
+      expect(items.length).to.equal(1);
+      expect(items[0].price).to.equal(price);
+      expect(items[0].seller).to.equal(addr1.address);
     });
   });
 });
