@@ -1,21 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { Spin, Card, Button, Row, Col, Timeline, Typography, Divider } from 'antd';
-import { ShoppingCartOutlined, HistoryOutlined, WalletOutlined, TagOutlined, StopOutlined } from '@ant-design/icons';
-import { ethers } from 'ethers';
-import { CONTRACT_ADDRESSES } from '../contracts/config.js';
-import MARKETPLACE_ABI from '../contracts/Marketplace.json';
-import NFT_ABI from '../contracts/NFT.json';
-import { message } from 'antd';
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import {
+  Spin,
+  Card,
+  Button,
+  Row,
+  Col,
+  Timeline,
+  Typography,
+  Divider,
+  Descriptions,
+  Tag,
+} from "antd";
+import {
+  ShoppingCartOutlined,
+  HistoryOutlined,
+  WalletOutlined,
+  TagOutlined,
+  StopOutlined,
+} from "@ant-design/icons";
+import { ethers } from "ethers";
+import { CONTRACT_ADDRESSES } from "../contracts/config.js";
+import MARKETPLACE_ABI from "../contracts/Marketplace.json";
+import NFT_ABI from "../contracts/NFT.json";
+import { message } from "antd";
 
 const { Title, Text } = Typography;
-const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
+const IPFS_GATEWAY = "https://ipfs.io/ipfs/";
 
 const NFTDetail = () => {
   const { id } = useParams();
   const [nft, setNft] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [walletAddress, setWalletAddress] = useState('');
+  const [walletAddress, setWalletAddress] = useState("");
   const [marketItemId, setMarketItemId] = useState(null);
   const [price, setPrice] = useState(null);
   const [ownershipHistory, setOwnershipHistory] = useState([]);
@@ -27,7 +44,7 @@ const NFTDetail = () => {
 
   useEffect(() => {
     const adjustTimelineHeight = () => {
-      const nftCard = document.querySelector('.nft-card');
+      const nftCard = document.querySelector(".nft-card");
       if (nftCard) {
         setTimelineHeight(nftCard.offsetHeight);
       }
@@ -35,15 +52,15 @@ const NFTDetail = () => {
 
     // Initial adjustment
     adjustTimelineHeight();
-    
+
     // Adjust on window resize
-    window.addEventListener('resize', adjustTimelineHeight);
-    
+    window.addEventListener("resize", adjustTimelineHeight);
+
     // Adjust after a short delay to ensure content is loaded
     const timer = setTimeout(adjustTimelineHeight, 100);
-    
+
     return () => {
-      window.removeEventListener('resize', adjustTimelineHeight);
+      window.removeEventListener("resize", adjustTimelineHeight);
       clearTimeout(timer);
     };
   }, [nft]); // Re-run when NFT data changes
@@ -51,9 +68,9 @@ const NFTDetail = () => {
   const loadNFT = async () => {
     try {
       setLoading(true);
-      
+
       if (!window.ethereum) {
-        throw new Error('Please install MetaMask to use this application');
+        throw new Error("Please install MetaMask to use this application");
       }
 
       const provider = new ethers.BrowserProvider(window.ethereum);
@@ -76,32 +93,36 @@ const NFTDetail = () => {
 
       // Get token owner from NFT contract
       const owner = await nftContract.ownerOf(id);
-      
+
       // Get token URI and metadata
       const tokenURI = await nftContract.tokenURI(id);
-      const httpURI = tokenURI.replace('ipfs://', IPFS_GATEWAY);
+      const httpURI = tokenURI.replace("ipfs://", IPFS_GATEWAY);
       const metadataResponse = await fetch(httpURI);
       const metadata = await metadataResponse.json();
 
       // Convert image URL if it's IPFS
-      const imageUrl = metadata.image.startsWith('ipfs://') 
-        ? metadata.image.replace('ipfs://', IPFS_GATEWAY)
+      const imageUrl = metadata.image.startsWith("ipfs://")
+        ? metadata.image.replace("ipfs://", IPFS_GATEWAY)
         : metadata.image;
 
       // Get both transfer and marketplace events
       const transferFilter = nftContract.filters.Transfer(null, null, id);
       const transferEvents = await nftContract.queryFilter(transferFilter);
-      
+
       // Get marketplace events
-      const marketItemCreatedFilter = marketplaceContract.filters.MarketItemCreated(null, null, id);
-      const marketItemCreatedEvents = await marketplaceContract.queryFilter(marketItemCreatedFilter);
+      const marketItemCreatedFilter =
+        marketplaceContract.filters.MarketItemCreated(null, null, id);
+      const marketItemCreatedEvents = await marketplaceContract.queryFilter(
+        marketItemCreatedFilter
+      );
 
       // Get current market items to determine status
       const marketItems = await marketplaceContract.fetchAvailableMarketItems();
-      const currentMarketItem = marketItems.find(item => 
-        item.tokenId.toString() === id.toString() && 
-        !item.sold && 
-        !item.canceled
+      const currentMarketItem = marketItems.find(
+        (item) =>
+          item.tokenId.toString() === id.toString() &&
+          !item.sold &&
+          !item.canceled
       );
 
       if (currentMarketItem) {
@@ -114,77 +135,93 @@ const NFTDetail = () => {
         ...transferEvents.map(async (event) => {
           const block = await event.getBlock();
           // Check if this is a withdrawal (transfer from marketplace to original owner)
-          const isWithdrawal = event.args[0].toLowerCase() === CONTRACT_ADDRESSES.sepolia.marketplace.toLowerCase() &&
-                             event.args[1].toLowerCase() === owner.toLowerCase();
-          
+          const isWithdrawal =
+            event.args[0].toLowerCase() ===
+              CONTRACT_ADDRESSES.sepolia.marketplace.toLowerCase() &&
+            event.args[1].toLowerCase() === owner.toLowerCase();
+
           // Check if this is a listing (transfer to marketplace)
-          const isListing = event.args[1].toLowerCase() === CONTRACT_ADDRESSES.sepolia.marketplace.toLowerCase();
-          
+          const isListing =
+            event.args[1].toLowerCase() ===
+            CONTRACT_ADDRESSES.sepolia.marketplace.toLowerCase();
+
           return {
-            type: isWithdrawal ? 'withdrawn' : 
-                  isListing ? 'listed' :
-                  event.args[0] === ethers.ZeroAddress ? 'mint' : 'transfer',
+            type: isWithdrawal
+              ? "withdrawn"
+              : isListing
+              ? "listed"
+              : event.args[0] === ethers.ZeroAddress
+              ? "mint"
+              : "transfer",
             from: event.args[0],
             to: event.args[1],
             timestamp: block.timestamp * 1000,
-            price: null
+            price: null,
           };
         }),
         ...marketItemCreatedEvents.map(async (event) => {
           const block = await event.getBlock();
-          const marketItem = await marketplaceContract.fetchAvailableMarketItems();
-          const currentItem = marketItem.find(item => 
-            item.tokenId.toString() === id.toString() && 
-            item.marketItemId.toString() === event.args.marketItemId.toString()
+          const marketItem =
+            await marketplaceContract.fetchAvailableMarketItems();
+          const currentItem = marketItem.find(
+            (item) =>
+              item.tokenId.toString() === id.toString() &&
+              item.marketItemId.toString() ===
+                event.args.marketItemId.toString()
           );
 
           // Check if this is the most recent event for this market item
-          const isMostRecent = !marketItem.some(item => 
-            item.tokenId.toString() === id.toString() && 
-            item.marketItemId.toString() === event.args.marketItemId.toString() &&
-            item.sold
+          const isMostRecent = !marketItem.some(
+            (item) =>
+              item.tokenId.toString() === id.toString() &&
+              item.marketItemId.toString() ===
+                event.args.marketItemId.toString() &&
+              item.sold
           );
 
           if (currentItem?.canceled) {
             return {
-              type: 'withdrawn',
+              type: "withdrawn",
               from: currentItem.seller,
               timestamp: block.timestamp * 1000,
-              price: ethers.formatEther(currentItem.price)
+              price: ethers.formatEther(currentItem.price),
             };
           } else if (currentItem?.sold) {
             return {
-              type: 'purchased',
+              type: "purchased",
               from: currentItem.seller,
               to: currentItem.owner,
               timestamp: block.timestamp * 1000,
-              price: ethers.formatEther(currentItem.price)
+              price: ethers.formatEther(currentItem.price),
             };
           } else if (isMostRecent) {
             return {
-              type: 'listed',
+              type: "listed",
               from: event.args.seller,
               timestamp: block.timestamp * 1000,
-              price: ethers.formatEther(event.args.price)
+              price: ethers.formatEther(event.args.price),
             };
           }
 
           return null; // Skip this event if it's not the most recent
-        })
+        }),
       ]);
 
       // Filter out null events and sort by timestamp
       const sortedEvents = allEvents
-        .filter(event => event !== null)
+        .filter((event) => event !== null)
         .sort((a, b) => b.timestamp - a.timestamp);
-      
-      console.log('Ownership History Events:', sortedEvents); // Debug log
+
+      console.log("Ownership History Events:", sortedEvents); // Debug log
       setOwnershipHistory(sortedEvents);
 
       // Determine if user is the original owner
-      const isOriginalOwner = owner.toLowerCase() === currentWalletAddress.toLowerCase();
+      const isOriginalOwner =
+        owner.toLowerCase() === currentWalletAddress.toLowerCase();
       const isListed = !!currentMarketItem;
-      const isSeller = currentMarketItem?.seller.toLowerCase() === currentWalletAddress.toLowerCase();
+      const isSeller =
+        currentMarketItem?.seller.toLowerCase() ===
+        currentWalletAddress.toLowerCase();
 
       setNft({
         tokenId: id,
@@ -193,13 +230,15 @@ const NFTDetail = () => {
         imageUrl: imageUrl,
         owner: owner,
         marketItemId: currentMarketItem?.marketItemId,
-        price: currentMarketItem ? ethers.formatEther(currentMarketItem.price) : null,
+        price: currentMarketItem
+          ? ethers.formatEther(currentMarketItem.price)
+          : null,
         isOriginalOwner,
         isListed,
-        isSeller
+        isSeller,
       });
     } catch (error) {
-      console.error('Error loading NFT:', error);
+      console.error("Error loading NFT:", error);
     } finally {
       setLoading(false);
     }
@@ -208,7 +247,7 @@ const NFTDetail = () => {
   const handlePurchase = async () => {
     try {
       if (!window.ethereum) {
-        throw new Error('Please install MetaMask to use this application');
+        throw new Error("Please install MetaMask to use this application");
       }
 
       const provider = new ethers.BrowserProvider(window.ethereum);
@@ -233,18 +272,18 @@ const NFTDetail = () => {
 
       // Wait for transaction to be mined
       await tx.wait();
-      
+
       // Refresh the page to update the UI
       window.location.reload();
     } catch (error) {
-      console.error('Error purchasing NFT:', error);
+      console.error("Error purchasing NFT:", error);
     }
   };
 
   const handleWithdraw = async () => {
     try {
       if (!window.ethereum) {
-        throw new Error('Please install MetaMask to use this application');
+        throw new Error("Please install MetaMask to use this application");
       }
 
       const provider = new ethers.BrowserProvider(window.ethereum);
@@ -265,18 +304,18 @@ const NFTDetail = () => {
 
       // Wait for transaction to be mined
       await tx.wait();
-      
+
       // Refresh the page to update the UI
       window.location.reload();
     } catch (error) {
-      console.error('Error withdrawing NFT:', error);
+      console.error("Error withdrawing NFT:", error);
     }
   };
 
   const handleListForSale = async () => {
     try {
       if (!window.ethereum) {
-        throw new Error('Please install MetaMask to use this application');
+        throw new Error("Please install MetaMask to use this application");
       }
 
       const provider = new ethers.BrowserProvider(window.ethereum);
@@ -306,7 +345,7 @@ const NFTDetail = () => {
       await approveTx.wait();
 
       // List NFT on marketplace
-      const priceInWei = ethers.parseEther('0.01'); // Default price
+      const priceInWei = ethers.parseEther("0.01"); // Default price
       const listTx = await marketplaceContract.createMarketItem(
         CONTRACT_ADDRESSES.sepolia.nft,
         id,
@@ -315,12 +354,12 @@ const NFTDetail = () => {
       );
       await listTx.wait();
 
-      message.success('NFT listed for sale successfully!');
+      message.success("NFT listed for sale successfully!");
       // Refresh the page to update the UI
       window.location.reload();
     } catch (error) {
-      console.error('Error listing NFT:', error);
-      message.error('Failed to list NFT: ' + error.message);
+      console.error("Error listing NFT:", error);
+      message.error("Failed to list NFT: " + error.message);
     }
   };
 
@@ -339,27 +378,32 @@ const NFTDetail = () => {
   const isDisabled = nft.isOriginalOwner || !nft.isListed || nft.isSeller;
 
   return (
-    <div className="container mx-auto p-6 h-screen" style={{marginTop: '15px'}}>
+    <div
+      className="container mx-auto p-6 h-screen"
+      style={{ marginTop: "15px" }}
+    >
       <Row gutter={[32, 32]} className="h-full">
         <Col xs={24} md={12} className="h-full">
           <Card className="h-full nft-card">
-            <div style={{ 
-              height: 'calc(100% - 200px)', 
-              overflow: 'hidden',
-              borderRadius: '12px'
-            }}>
+            <div
+              style={{
+                height: "calc(100% - 200px)",
+                overflow: "hidden",
+                borderRadius: "12px",
+              }}
+            >
               <img
-                src={nft.imageUrl || '/placeholder.png'}
+                src={nft.imageUrl || "/placeholder.png"}
                 alt={nft.title}
                 style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  borderRadius: '12px'
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  borderRadius: "12px",
                 }}
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = '/placeholder.png';
+                  e.target.src = "/placeholder.png";
                 }}
               />
             </div>
@@ -373,16 +417,19 @@ const NFTDetail = () => {
                       Price: {price} ETH
                     </div>
                   )}
-                  <div className="flex items-center space-x-2" style={{marginTop: '15px'}}>
+                  <div
+                    className="flex items-center space-x-2"
+                    style={{ marginTop: "15px" }}
+                  >
                     <WalletOutlined />
-                    <Text type="secondary" style={{marginLeft: '10px'}}>
+                    <Text type="secondary" style={{ marginLeft: "10px" }}>
                       Owner: {nft.owner.slice(0, 6)}...{nft.owner.slice(-4)}
                     </Text>
                   </div>
                 </div>
               }
             />
-            <div className="mt-6" style={{marginTop: '15px'}}>
+            <div className="mt-6" style={{ marginTop: "15px" }}>
               {!nft.isListed && nft.isOriginalOwner ? (
                 <Button
                   type="primary"
@@ -395,15 +442,18 @@ const NFTDetail = () => {
                 </Button>
               ) : (
                 <Button
-                  type={isDisabled ? 'default' : 'primary'}
+                  type={isDisabled ? "default" : "primary"}
                   icon={<ShoppingCartOutlined />}
                   onClick={isDisabled ? handleWithdraw : handlePurchase}
                   disabled={!marketItemId}
                   size="large"
                   block
                 >
-                  {!marketItemId ? 'Not Listed for Sale' : 
-                   isDisabled ? 'Withdraw' : 'Purchase'}
+                  {!marketItemId
+                    ? "Not Listed for Sale"
+                    : isDisabled
+                    ? "Withdraw"
+                    : "Purchase"}
                 </Button>
               )}
             </div>
@@ -411,71 +461,157 @@ const NFTDetail = () => {
         </Col>
 
         <Col xs={24} md={12} className="h-full">
-          <Card 
-            title={<><HistoryOutlined /> Ownership History</>} 
-            style={{ height: '100%' }}
-            className="h-full"
-          >
-            <div style={{ 
-              height: 'calc(100% - 60px)', 
-              overflowY: 'auto',
-              padding: '8px 16px',
-              maxHeight: 'calc(100vh - 200px)'
-            }}>
-              <Timeline
-                items={ownershipHistory.map((event, index) => {
-                  console.log('Rendering event:', event); // Debug log
-                  return {
-                    color: index === 0 ? 'blue' : 'gray',
-                    dot: event.type === 'listed' ? <TagOutlined /> :
-                         event.type === 'purchased' ? <ShoppingCartOutlined /> :
-                         event.type === 'withdrawn' ? <StopOutlined /> :
-                         event.type === 'mint' ? <WalletOutlined /> :
-                         <HistoryOutlined />,
-                    children: (
-                      <div key={index} className="flex items-start">
-                        <span 
-                          style={{
-                            fontWeight: 'bold',
-                            marginRight: '8px',
-                            minWidth: '120px',
-                            color: event.type === 'mint' ? '#ca8a04' :
-                                   event.type === 'purchased' ? '#16a34a' :
-                                   event.type === 'listed' ? '#2563eb' :
-                                   event.type === 'withdrawn' ? '#dc2626' :
-                                   '#4b5563'
-                          }}
-                        >
-                          {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
-                        </span>
-                        <div>
-                          {event.type !== 'withdrawn' && event.from && (
-                            <div className="text-sm text-gray-500">
-                              From: {event.from === ethers.ZeroAddress ? 'Minted' : 
-                                `${event.from.slice(0, 6)}...${event.from.slice(-4)}`}
+          <div className="flex flex-col h-full gap-4">
+            <Card
+              title={
+                <>
+                  <TagOutlined /> Metadata
+                </>
+              }
+              className="flex-1"
+            >
+              <Descriptions
+                column={1}
+                bordered
+                size="small"
+                labelStyle={{
+                  backgroundColor: "#fafafa",
+                  width: "120px",
+                  fontWeight: "bold",
+                }}
+              >
+                <Descriptions.Item label="Title">{nft.title}</Descriptions.Item>
+
+                <Descriptions.Item label="Description">
+                  {nft.description}
+                </Descriptions.Item>
+
+                <Descriptions.Item label="Token ID">
+                  <Tag color="blue">#{nft.tokenId}</Tag>
+                </Descriptions.Item>
+
+                <Descriptions.Item label="Current Owner">
+                  <div className="flex items-center">
+                    <WalletOutlined className="mr-2" />
+                    <Text copyable>{nft.owner}</Text>
+                  </div>
+                </Descriptions.Item>
+
+                <Descriptions.Item label="Image">
+                  <div className="space-y-1">
+                    <div>
+                      <Text type="secondary">URL: </Text>
+                      <Text copyable>{nft.imageUrl}</Text>
+                    </div>
+                    <div>
+                      <Text type="secondary">Format: </Text>
+                      <Tag color="green">{nft.imageUrl.split(".").pop()}</Tag>
+                    </div>
+                  </div>
+                </Descriptions.Item>
+
+                {price && (
+                  <Descriptions.Item label="Current Price">
+                    <Text type="success" strong style={{ fontSize: "16px" }}>
+                      {price} ETH
+                    </Text>
+                  </Descriptions.Item>
+                )}
+              </Descriptions>
+            </Card>
+
+            <Card
+              title={
+                <>
+                  <HistoryOutlined /> Ownership History
+                </>
+              }
+              className="flex-1"
+            >
+              <div
+                style={{
+                  height: "calc(100% - 60px)",
+                  overflowY: "auto",
+                  padding: "8px 16px",
+                  maxHeight: "calc(100vh - 400px)",
+                }}
+              >
+                <Timeline
+                  items={ownershipHistory.map((event, index) => {
+                    console.log("Rendering event:", event); // Debug log
+                    return {
+                      color: index === 0 ? "blue" : "gray",
+                      dot:
+                        event.type === "listed" ? (
+                          <TagOutlined />
+                        ) : event.type === "purchased" ? (
+                          <ShoppingCartOutlined />
+                        ) : event.type === "withdrawn" ? (
+                          <StopOutlined />
+                        ) : event.type === "mint" ? (
+                          <WalletOutlined />
+                        ) : (
+                          <HistoryOutlined />
+                        ),
+                      children: (
+                        <div key={index} className="flex items-start">
+                          <span
+                            style={{
+                              fontWeight: "bold",
+                              marginRight: "8px",
+                              minWidth: "120px",
+                              color:
+                                event.type === "mint"
+                                  ? "#ca8a04"
+                                  : event.type === "purchased"
+                                  ? "#16a34a"
+                                  : event.type === "listed"
+                                  ? "#2563eb"
+                                  : event.type === "withdrawn"
+                                  ? "#dc2626"
+                                  : "#4b5563",
+                            }}
+                          >
+                            {event.type.charAt(0).toUpperCase() +
+                              event.type.slice(1)}
+                          </span>
+                          <div>
+                            {event.type !== "withdrawn" && event.from && (
+                              <div className="text-sm text-gray-500">
+                                From:{" "}
+                                {event.from === ethers.ZeroAddress
+                                  ? "Minted"
+                                  : `${event.from.slice(
+                                      0,
+                                      6
+                                    )}...${event.from.slice(-4)}`}
+                              </div>
+                            )}
+                            {event.to && (
+                              <div className="text-sm text-gray-500">
+                                To:{" "}
+                                {`${event.to.slice(0, 6)}...${event.to.slice(
+                                  -4
+                                )}`}
+                              </div>
+                            )}
+                            {event.price && (
+                              <div className="text-sm text-blue-500">
+                                Price: {event.price} ETH
+                              </div>
+                            )}
+                            <div className="text-xs text-gray-400">
+                              {new Date(event.timestamp).toLocaleString()}
                             </div>
-                          )}
-                          {event.to && (
-                            <div className="text-sm text-gray-500">
-                              To: {`${event.to.slice(0, 6)}...${event.to.slice(-4)}`}
-                            </div>
-                          )}
-                          {event.price && (
-                            <div className="text-sm text-blue-500">
-                              Price: {event.price} ETH
-                            </div>
-                          )}
-                          <div className="text-xs text-gray-400">
-                            {new Date(event.timestamp).toLocaleString()}
                           </div>
                         </div>
-                      </div>
-                    )
-                  };
-                })}
-              />
-            </div>
-          </Card>
+                      ),
+                    };
+                  })}
+                />
+              </div>
+            </Card>
+          </div>
         </Col>
       </Row>
     </div>
@@ -483,4 +619,3 @@ const NFTDetail = () => {
 };
 
 export default NFTDetail;
-
