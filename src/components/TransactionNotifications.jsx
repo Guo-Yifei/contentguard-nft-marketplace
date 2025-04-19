@@ -56,10 +56,17 @@ const TransactionHistory = () => {
             const metadataResponse = await fetch(httpURI);
             const metadata = await metadataResponse.json();
 
+            // Get block timestamp for this transaction
+            const block = await provider.getBlock(item.blockNumber);
+            const timestamp = block ? block.timestamp * 1000 : Date.now(); // Convert to milliseconds
+
             // Convert image URL if it's IPFS
             const imageUrl = metadata.image.startsWith('ipfs://') 
               ? metadata.image.replace('ipfs://', IPFS_GATEWAY)
               : metadata.image;
+
+            // Check if the item is actually sold by verifying if the owner is different from the marketplace
+            const isSold = item.owner.toLowerCase() !== CONTRACT_ADDRESSES.sepolia.marketplace.toLowerCase();
 
             return {
               key: item.marketItemId.toString(),
@@ -70,9 +77,9 @@ const TransactionHistory = () => {
               price: ethers.formatEther(item.price),
               seller: item.seller,
               buyer: item.owner,
-              status: item.sold ? 'completed' : 'pending',
+              status: isSold ? 'completed' : 'pending',
               role: item.seller.toLowerCase() === currentWalletAddress.toLowerCase() ? 'seller' : 'buyer',
-              timestamp: new Date().toISOString()
+              timestamp: new Date(timestamp).toISOString()
             };
           } catch (error) {
             console.error('Error loading transaction:', error);
