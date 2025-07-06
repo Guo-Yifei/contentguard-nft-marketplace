@@ -223,10 +223,10 @@ contentguard-nft-marketplace/
 - [x] Contract verification on Etherscan
 - [x] Frontend basic structure
 - [x] MetaMask integration
-- [ ] NFT minting interface
-- [ ] Marketplace listing and trading
-- [ ] User dashboard
-- [ ] IPFS integration
+- [x] NFT minting interface
+- [x] Marketplace listing and trading
+- [x] User dashboard
+- [x] IPFS integration
 
 <<<<<<< HEAD
 ## 🤝 Contributing
